@@ -1,8 +1,8 @@
 package org.saebio.sample;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 public class Sample {
     private int petition;
@@ -20,6 +20,7 @@ public class Sample {
     private int year;
     private String type;
     private String result;
+    private int episode;
 
     public Sample() { }
 
@@ -159,5 +160,20 @@ public class Sample {
 
     public void setResult(String result) {
         this.result = result;
+    }
+
+    public int getEpisode() {
+        return episode;
+    }
+
+    public void setEpisode(int episode) {
+        this.episode = episode;
+    }
+
+    public boolean belongToSameEpisode(Sample oldSample) {
+        String oldResult = oldSample.getResult();
+        String newResult = this.getResult();
+        long daysBetween = DAYS.between(oldSample.getRegistryDate(), this.getRegistryDate());
+        return Math.abs(daysBetween) < 20 && newResult.equals(oldResult) && this.getNHC().equals(oldSample.getNHC());
     }
 }
