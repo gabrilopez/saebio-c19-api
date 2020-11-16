@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import org.saebio.sample.Sample;
 import org.saebio.sample.SampleService;
+import spark.Filter;
+
 import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +23,13 @@ public class ApiRestService {
     private static Map<String, Sample> cache = new HashMap<>();
 
     public static void main(String[] args) {
+        // Filter after each request
+        after((Filter) (req, res) -> {
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.type("application/json");
+        });
+
         post("/insert-data", (req, res)-> {
             String body = req.body();
             CSVReader reader = new CSVReader(new StringReader(body));
@@ -35,10 +44,7 @@ public class ApiRestService {
                         .toJson(new Response(HttpStatus.InternalError(), "Could not connect to database"));
             }
 
-            sampleService.getSamplesByNHC("2646");
-
             String[] line;
-            // /*
             while ((line = reader.readNext()) != null) {
                 String temp = Arrays.toString(line);
                 temp = temp.substring(1, temp.length() - 1);
@@ -58,9 +64,9 @@ public class ApiRestService {
             System.out.println(message);
             System.out.println("FINAL CACHE SIZE:" + cache.size());
             System.gc();
-             // */
+
             return new Gson()
-                    .toJson(new Response(HttpStatus.OK(), message));
+                    .toJsonTree(new Response(HttpStatus.OK(), message));
         });
     }
 
@@ -77,7 +83,7 @@ public class ApiRestService {
             sample.setNHC(line[6]);
             sample.setPatient(line[7]);
             sample.setSex(line[8]);
-            sample.setAge(line[9]);
+            sample.setAge(Integer.parseInt(line[9]));
             sample.setBirthDate(LocalDate.parse(line[10], birthDateFormatter));
             sample.setMonth(Integer.parseInt(line[11]));
             sample.setYear(Integer.parseInt(line[12]));

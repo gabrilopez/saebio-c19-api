@@ -14,7 +14,7 @@ public class Sample {
     private String NHC;
     private String patient;
     private String sex;
-    private String age;
+    private int age;
     private LocalDate birthDate;
     private int month;
     private int year;
@@ -24,7 +24,7 @@ public class Sample {
 
     public Sample() { }
 
-    public Sample(int petition, LocalDate registryDate, String hospital, String hospitalService, String destination, String prescriptor, String NHC, String patient, String sex, String age, LocalDate birthDate, int month, int year, String type, String result) {
+    public Sample(int petition, LocalDate registryDate, String hospital, String hospitalService, String destination, String prescriptor, String NHC, String patient, String sex, int age, LocalDate birthDate, int month, int year, String type, String result) {
         this.petition = petition;
         this.registryDate = registryDate;
         this.hospital = hospital;
@@ -114,11 +114,11 @@ public class Sample {
         this.sex = sex;
     }
 
-    public String getAge() {
+    public int getAge() {
         return age;
     }
 
-    public void setAge(String age) {
+    public void setAge(int age) {
         this.age = age;
     }
 
@@ -174,6 +174,6 @@ public class Sample {
         String oldResult = oldSample.getResult();
         String newResult = this.getResult();
         long daysBetween = DAYS.between(oldSample.getRegistryDate(), this.getRegistryDate());
-        return Math.abs(daysBetween) < 20 && newResult.equals(oldResult) && this.getNHC().equals(oldSample.getNHC());
+        return Math.abs(daysBetween) < 30 && newResult.equals(oldResult) && this.getNHC().equals(oldSample.getNHC());
     }
 }

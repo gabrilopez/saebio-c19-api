@@ -56,7 +56,7 @@ public class SampleService {
             preparedStatement.setString(7, sample.getNHC());
             preparedStatement.setString(8, sample.getPatient());
             preparedStatement.setString(9, sample.getSex());
-            preparedStatement.setString(10, sample.getAge());
+            preparedStatement.setInt(10, sample.getAge());
             preparedStatement.setObject(11, sample.getBirthDate());
             preparedStatement.setInt(12, sample.getMonth());
             preparedStatement.setInt(13, sample.getYear());
@@ -123,7 +123,7 @@ public class SampleService {
             sample.setNHC(resultSet.getString("NHC"));
             sample.setPatient(resultSet.getString("patient"));
             sample.setSex(resultSet.getString("sex"));
-            sample.setAge(resultSet.getString("age"));
+            sample.setAge(resultSet.getInt("age"));
             sample.setBirthDate(LocalDate.parse((CharSequence) resultSet.getDate("birthDate")));
             sample.setMonth(resultSet.getInt("month"));
             sample.setYear(resultSet.getInt("year"));
