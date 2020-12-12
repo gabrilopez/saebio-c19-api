@@ -34,12 +34,9 @@ public class ApiRestService {
             String body = req.body();
             CSVReader reader = new CSVReader(new StringReader(body));
 
-            int cont = 0;
             int errorCount = 0;
             SampleService sampleService = new SampleService();
             if (!sampleService.tryConnection()) {
-                String gson = new Gson().toJson(new Response(HttpStatus.InternalError(), "Could not connect to database"));
-                System.out.println(gson);
                 return new Gson()
                         .toJson(new Response(HttpStatus.InternalError(), "Could not connect to database"));
             }
@@ -56,8 +53,6 @@ public class ApiRestService {
                 } else {
                     errorCount += (sampleService.addSample(sample) == HttpStatus.OK()) ? 0 : 1;
                 }
-                if (cont == 16374) break;   // TODO: BORRAR!
-                cont++;
             }
 
             String message = "[FINISHED]\nRead " + reader.getLinesRead() + "\tError count: " + errorCount;
@@ -83,7 +78,7 @@ public class ApiRestService {
             sample.setNHC(line[6]);
             sample.setPatient(line[7]);
             sample.setSex(line[8]);
-            sample.setAge(Integer.parseInt(line[9]));
+            sample.setAge(isNumeric(line[9]) ? Integer.valueOf(line[9]) : null);
             sample.setBirthDate(LocalDate.parse(line[10], birthDateFormatter));
             sample.setMonth(Integer.parseInt(line[11]));
             sample.setYear(Integer.parseInt(line[12]));
@@ -91,22 +86,37 @@ public class ApiRestService {
             sample.setResult(line[14]);
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
+            e.printStackTrace();
             return null;
         }
-        cache.put(sample.getNHC(), sample);
+        updateSampleCache(sample);
         return sample;
     }
 
     private static int getSampleEpisodeNumber(Sample newSample) {
+        // Old sample will always be the first sample from current episode
         String NHC = newSample.getNHC();
-        Sample oldSample;
-        if (cache.containsKey(NHC)) {
-            oldSample = cache.get(NHC);
-        } else {
+        Sample oldSample = cache.getOrDefault(NHC, null);
+
+        if (oldSample == null) {
             SampleService sampleService = new SampleService();
-            oldSample = sampleService.getLastSampleForNHC(NHC);
+            oldSample = sampleService.getFirstSampleFromCurrentEpisode(NHC);
             if (oldSample == null) return 1;
+            // Save old sample found in database to cache
+            cache.put(NHC, oldSample);
         }
         return newSample.belongToSameEpisode(oldSample) ? oldSample.getEpisode() : oldSample.getEpisode() + 1;
+    }
+
+    private static void updateSampleCache(Sample newSample) {
+        String NHC = newSample.getNHC();
+        Sample oldSample = cache.getOrDefault(NHC, null);
+        if (oldSample == null || oldSample.getEpisode() < newSample.getEpisode()) {
+            cache.put(NHC, newSample);
+        }
+    }
+
+    private static boolean isNumeric(String s) {
+        return s.chars().allMatch(Character::isDigit);
     }
 }

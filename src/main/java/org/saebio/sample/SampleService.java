@@ -56,7 +56,7 @@ public class SampleService {
             preparedStatement.setString(7, sample.getNHC());
             preparedStatement.setString(8, sample.getPatient());
             preparedStatement.setString(9, sample.getSex());
-            preparedStatement.setInt(10, sample.getAge());
+            preparedStatement.setObject(10, sample.getAge(), Types.INTEGER);
             preparedStatement.setObject(11, sample.getBirthDate());
             preparedStatement.setInt(12, sample.getMonth());
             preparedStatement.setInt(13, sample.getYear());
@@ -94,11 +94,16 @@ public class SampleService {
         }
     }
 
-    public Sample getLastSampleForNHC(String NHC) {
+    public Sample getFirstSampleFromCurrentEpisode(String NHC) {
         try {
-            PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT * FROM Samples WHERE NHC = ? ORDER BY registryDate DESC LIMIT 1");
+            PreparedStatement preparedStatement = getConnection().prepareStatement(
+                "SELECT * FROM Samples WHERE NHC = ? AND episode = (SELECT MAX(episode) from Samples WHERE NHC = ?) " +
+                        "ORDER BY registryDate ASC LIMIT 1"
+            );
             preparedStatement.setString(1, NHC);
+            preparedStatement.setString(2, NHC);
             ResultSet resultSet = preparedStatement.executeQuery();
+
             if (resultSet.next()) {
                 return transformRowToSample(resultSet);
             }
@@ -123,7 +128,7 @@ public class SampleService {
             sample.setNHC(resultSet.getString("NHC"));
             sample.setPatient(resultSet.getString("patient"));
             sample.setSex(resultSet.getString("sex"));
-            sample.setAge(resultSet.getInt("age"));
+            sample.setAge(getInteger(resultSet, "age")); // Handle possible NULL value
             sample.setBirthDate(LocalDate.parse((CharSequence) resultSet.getDate("birthDate")));
             sample.setMonth(resultSet.getInt("month"));
             sample.setYear(resultSet.getInt("year"));
@@ -138,4 +143,11 @@ public class SampleService {
         }
         return sample;
     }
+
+    private Integer getInteger(ResultSet resultSet, String columnLabel) throws SQLException {
+        int value = resultSet.getInt(columnLabel);
+        return resultSet.wasNull() ? null : value;
+    }
+
+
 }
