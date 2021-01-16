@@ -5,50 +5,21 @@ import java.time.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 public class Sample {
-    private int petition;
     private LocalDate registryDate;
-    private String hospital;
-    private String hospitalService;
-    private String destination;
-    private String prescriptor;
-    private String NHC;
-    private String patient;
-    private String sex;
-    private Integer age;
+    private String patientName;
+    private String patientSurname;
     private LocalDate birthDate;
-    private int month;
-    private int year;
-    private String type;
-    private String result;
+    private String NHC;
+    private int petition;
+    private String service;
+    private String criteria;
+    private String resultPCR = "";
+    private String resultTMA = "";
+    private String sex = "";
+    private Integer age = null;
+    private String origin = "";
+    private String reason = "";
     private int episode;
-
-    public Sample() { }
-
-    public Sample(int petition, LocalDate registryDate, String hospital, String hospitalService, String destination, String prescriptor, String NHC, String patient, String sex, int age, LocalDate birthDate, int month, int year, String type, String result) {
-        this.petition = petition;
-        this.registryDate = registryDate;
-        this.hospital = hospital;
-        this.hospitalService = hospitalService;
-        this.destination = destination;
-        this.prescriptor = prescriptor;
-        this.NHC = NHC;
-        this.patient = patient;
-        this.sex = sex;
-        this.age = age;
-        this.birthDate = birthDate;
-        this.month = month;
-        this.year = year;
-        this.type = type;
-        this.result = result;
-    }
-
-    public int getPetition() {
-        return petition;
-    }
-
-    public void setPetition(int petition) {
-        this.petition = petition;
-    }
 
     public LocalDate getRegistryDate() {
         return registryDate;
@@ -58,36 +29,28 @@ public class Sample {
         this.registryDate = registryDate;
     }
 
-    public String getHospital() {
-        return hospital;
+    public String getPatientName() {
+        return patientName;
     }
 
-    public void setHospital(String hospital) {
-        this.hospital = hospital;
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
     }
 
-    public String getHospitalService() {
-        return hospitalService;
+    public String getPatientSurname() {
+        return patientSurname;
     }
 
-    public void setHospitalService(String hospitalService) {
-        this.hospitalService = hospitalService;
+    public void setPatientSurname(String patientSurname) {
+        this.patientSurname = patientSurname;
     }
 
-    public String getDestination() {
-        return destination;
+    public LocalDate getBirthDate() {
+        return birthDate;
     }
 
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
-    public String getPrescriptor() {
-        return prescriptor;
-    }
-
-    public void setPrescriptor(String prescriptor) {
-        this.prescriptor = prescriptor;
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     public String getNHC() {
@@ -98,12 +61,44 @@ public class Sample {
         this.NHC = NHC;
     }
 
-    public String getPatient() {
-        return patient;
+    public int getPetition() {
+        return petition;
     }
 
-    public void setPatient(String patient) {
-        this.patient = patient;
+    public void setPetition(int petition) {
+        this.petition = petition;
+    }
+
+    public String getService() {
+        return service;
+    }
+
+    public void setService(String service) {
+        this.service = service;
+    }
+
+    public String getCriteria() {
+        return criteria;
+    }
+
+    public void setCriteria(String criteria) {
+        this.criteria = criteria;
+    }
+
+    public String getResultPCR() {
+        return resultPCR;
+    }
+
+    public void setResultPCR(String resultPCR) {
+        this.resultPCR = resultPCR;
+    }
+
+    public String getResultTMA() {
+        return resultTMA;
+    }
+
+    public void setResultTMA(String resultTMA) {
+        this.resultTMA = resultTMA;
     }
 
     public String getSex() {
@@ -122,44 +117,20 @@ public class Sample {
         this.age = age;
     }
 
-    public LocalDate getBirthDate() {
-        return birthDate;
+    public String getOrigin() {
+        return origin;
     }
 
-    public void setBirthDate(LocalDate birthDate) {
-        this.birthDate = birthDate;
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 
-    public int getMonth() {
-        return month;
+    public String getReason() {
+        return reason;
     }
 
-    public void setMonth(int month) {
-        this.month = month;
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public void setYear(int year) {
-        this.year = year;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public int getEpisode() {
@@ -171,8 +142,6 @@ public class Sample {
     }
 
     public boolean belongToSameEpisode(Sample oldSample) {
-        String oldResult = oldSample.getResult();
-        String newResult = this.getResult();
         long daysBetween = DAYS.between(oldSample.getRegistryDate(), this.getRegistryDate());
         return Math.abs(daysBetween) < 30 && this.getNHC().equals(oldSample.getNHC());
     }

@@ -2,7 +2,6 @@ package org.saebio.sample;
 
 import org.saebio.api.HttpStatus;
 
-import javax.xml.transform.Result;
 import java.sql.*;
 import java.time.LocalDate;
 
@@ -45,27 +44,27 @@ public class SampleService {
     public int addSample(Sample sample) {
         try {
             PreparedStatement preparedStatement = getConnection().prepareStatement("INSERT INTO Samples " +
-                    "(petition, registryDate, hospital, hospitalService, destination, prescriptor, NHC, patient, sex, age, birthDate, month, year, type, result, episode)" +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            preparedStatement.setInt(1, sample.getPetition());
-            preparedStatement.setObject(2, sample.getRegistryDate());
-            preparedStatement.setString(3, sample.getHospital());
-            preparedStatement.setString(4, sample.getHospitalService());
-            preparedStatement.setString(5, sample.getDestination());
-            preparedStatement.setString(6, sample.getPrescriptor());
-            preparedStatement.setString(7, sample.getNHC());
-            preparedStatement.setString(8, sample.getPatient());
-            preparedStatement.setString(9, sample.getSex());
-            preparedStatement.setObject(10, sample.getAge(), Types.INTEGER);
-            preparedStatement.setObject(11, sample.getBirthDate());
-            preparedStatement.setInt(12, sample.getMonth());
-            preparedStatement.setInt(13, sample.getYear());
-            preparedStatement.setString(14, sample.getType());
-            preparedStatement.setString(15, sample.getResult());
-            preparedStatement.setInt(16, sample.getEpisode());
-            // TODO: Add episode number
+                    "(registryDate, patientName, patientSurname, birthDate, NHC, petition, service, criteria, resultPCR, resultTMA, sex, age, origin, reason, episode)" +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            preparedStatement.setObject(1, sample.getRegistryDate());
+            preparedStatement.setString(2, sample.getPatientName());
+            preparedStatement.setString(3, sample.getPatientSurname());
+            preparedStatement.setObject(4, sample.getBirthDate());
+            preparedStatement.setString(5, sample.getNHC());
+            preparedStatement.setInt(6, sample.getPetition());
+            preparedStatement.setString(7, sample.getService());
+            preparedStatement.setString(8, sample.getCriteria());
+            preparedStatement.setString(9, sample.getResultPCR());
+            preparedStatement.setString(10, sample.getResultTMA());
+            preparedStatement.setString(11, sample.getSex());
+            preparedStatement.setObject(12, sample.getAge(), Types.INTEGER);
+            preparedStatement.setString(13, sample.getOrigin());
+            preparedStatement.setString(14, sample.getReason());
+            preparedStatement.setInt(15, sample.getEpisode());
+
             preparedStatement.execute();
         } catch (SQLIntegrityConstraintViolationException e) {
+            e.printStackTrace();
         } catch (SQLException e) {
             System.out.println("Error with petition [" + sample.getPetition() + "]. Check this entry's data");
             return HttpStatus.BadRequest();
@@ -80,12 +79,6 @@ public class SampleService {
             PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT * FROM Samples WHERE NHC = ?");
             preparedStatement.setString(1, NHC);
             ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                System.out.println(resultSet.getString("NHC"));
-                System.out.println(resultSet.getString("result"));
-                System.out.println(resultSet.getTimestamp("registryDate"));
-                System.out.println("\n\n");
-            }
             return resultSet;
         } catch (SQLException e) {
             return null;
@@ -119,21 +112,20 @@ public class SampleService {
         Sample sample = new Sample();
         try {
             if (!resultSet.next()) return null;
-            sample.setPetition(resultSet.getInt("petition"));
             sample.setRegistryDate(LocalDate.parse((CharSequence) resultSet.getDate("registryDate")));
-            sample.setHospital(resultSet.getString("hospital"));
-            sample.setHospitalService(resultSet.getString("hospitalService"));
-            sample.setDestination(resultSet.getString("destination"));
-            sample.setPrescriptor(resultSet.getString("prescriptor"));
-            sample.setNHC(resultSet.getString("NHC"));
-            sample.setPatient(resultSet.getString("patient"));
-            sample.setSex(resultSet.getString("sex"));
-            sample.setAge(getInteger(resultSet, "age")); // Handle possible NULL value
+            sample.setPatientName(resultSet.getString("patientName"));
+            sample.setPatientSurname(resultSet.getString("patientSurname"));
             sample.setBirthDate(LocalDate.parse((CharSequence) resultSet.getDate("birthDate")));
-            sample.setMonth(resultSet.getInt("month"));
-            sample.setYear(resultSet.getInt("year"));
-            sample.setType(resultSet.getString("type"));
-            sample.setResult(resultSet.getString("result"));
+            sample.setNHC(resultSet.getString("NHC"));
+            sample.setPetition(resultSet.getInt("petition"));
+            sample.setService(resultSet.getString("service"));
+            sample.setCriteria(resultSet.getString("criteria"));
+            sample.setCriteria(resultSet.getString("resultPCR"));
+            sample.setCriteria(resultSet.getString("resultTMA"));
+            sample.setSex(resultSet.getString("sex"));
+            sample.setAge(getInteger(resultSet, "age"));
+            sample.setOrigin(resultSet.getString("origin"));
+            sample.setReason(resultSet.getString("reason"));
             sample.setEpisode(resultSet.getInt("episode"));
         } catch (SQLException e) {
             return null;

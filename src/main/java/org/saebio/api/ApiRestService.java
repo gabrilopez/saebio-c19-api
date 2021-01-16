@@ -20,6 +20,12 @@ public class ApiRestService {
     private static DateTimeFormatter birthDateFormatter = DateTimeFormatter
             .ofPattern("dd.MM.yyyy")
             .withLocale(Locale.ENGLISH);
+    private static DateTimeFormatter registryDateFormatter = DateTimeFormatter
+            .ofPattern("[d-M-yy][dd-MM-yy][dd-M-yy][d-MM-yy]");
+            /*
+    private static DateTimeFormatter registryDateFormatter = DateTimeFormatter
+            .ofPattern("d-M-yy")
+            .withLocale(Locale.ENGLISH);*/
     private static Map<String, Sample> cache = new HashMap<>();
 
     public static void main(String[] args) {
@@ -66,24 +72,26 @@ public class ApiRestService {
     }
 
     private static Sample createSampleFromLine(String[] line) {
-        if (line.length < 16) return null;
+        // Length 8 mínima por ahora porque los campos resultadoTMA, sexo, edad, procedencia y motivo
+        // pueden no estar seteados
+        if (line.length < 9) return null;
         Sample sample = new Sample();
         try {
-            sample.setPetition(Integer.parseInt(line[0]));
-            sample.setRegistryDate(LocalDate.parse(line[1]));
-            sample.setHospital(line[2]);
-            sample.setHospitalService(line[3]);
-            sample.setDestination(line[4]);
-            sample.setPrescriptor(line[5]);
-            sample.setNHC(line[6]);
-            sample.setPatient(line[7]);
-            sample.setSex(line[8]);
-            sample.setAge(isNumeric(line[9]) ? Integer.valueOf(line[9]) : null);
-            sample.setBirthDate(LocalDate.parse(line[10], birthDateFormatter));
-            sample.setMonth(Integer.parseInt(line[11]));
-            sample.setYear(Integer.parseInt(line[12]));
-            sample.setType(line[13]);
-            sample.setResult(line[14]);
+            sample.setRegistryDate(LocalDate.parse(line[0].split(" ")[0].replace('/', '-'), registryDateFormatter));
+            sample.setPatientName(line[1]);
+            sample.setPatientSurname(line[2]);
+            sample.setBirthDate(LocalDate.parse(line[3], birthDateFormatter));
+            sample.setNHC(line[4]);
+            sample.setPetition(Integer.parseInt(line[5]));
+            sample.setService(line[6]);
+            sample.setCriteria(line[7]);
+            sample.setResultPCR(line[8]);
+            // El hospital doctor negrín está trabajando en implementar estos campos
+            if (line.length > 9) sample.setResultTMA(line[9]);
+            if (line.length > 10) sample.setSex(line[10]);
+            if (line.length > 11) sample.setAge(isNumeric(line[11]) ? Integer.valueOf(line[11]) : null);
+            if (line.length > 12) sample.setOrigin(line[12]);
+            if (line.length > 13) sample.setReason(line[13]);
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
             e.printStackTrace();
@@ -117,6 +125,6 @@ public class ApiRestService {
     }
 
     private static boolean isNumeric(String s) {
-        return s.chars().allMatch(Character::isDigit);
+        return s.length() > 0 && s.chars().allMatch(Character::isDigit);
     }
 }
