@@ -64,7 +64,6 @@ public class SampleService {
 
             preparedStatement.execute();
         } catch (SQLIntegrityConstraintViolationException e) {
-            e.printStackTrace();
         } catch (SQLException e) {
             System.out.println("Error with petition [" + sample.getPetition() + "]. Check this entry's data");
             return HttpStatus.BadRequest();

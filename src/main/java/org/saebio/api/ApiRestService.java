@@ -88,10 +88,10 @@ public class ApiRestService {
             sample.setResultPCR(line[8]);
             // El hospital doctor negrín está trabajando en implementar estos campos
             if (line.length > 9) sample.setResultTMA(line[9]);
-            if (line.length > 10) sample.setSex(line[10]);
+            if (line.length > 10) sample.setSex(!line[10].trim().isEmpty() ? line[10] : null);
             if (line.length > 11) sample.setAge(isNumeric(line[11]) ? Integer.valueOf(line[11]) : null);
-            if (line.length > 12) sample.setOrigin(line[12]);
-            if (line.length > 13) sample.setReason(line[13]);
+            if (line.length > 12) sample.setOrigin(!line[12].trim().isEmpty() ? line[12] : null);
+            if (line.length > 13) sample.setReason(!line[13].trim().isEmpty() ? line[13] : null);
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
             e.printStackTrace();

@@ -15,10 +15,10 @@ public class Sample {
     private String criteria;
     private String resultPCR = "";
     private String resultTMA = "";
-    private String sex = "";
+    private String sex = null;
     private Integer age = null;
-    private String origin = "";
-    private String reason = "";
+    private String origin = null;
+    private String reason = null;
     private int episode;
 
     public LocalDate getRegistryDate() {
