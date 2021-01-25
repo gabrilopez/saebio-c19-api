@@ -13,8 +13,8 @@ public class Sample {
     private int petition;
     private String service;
     private String criteria;
-    private String resultPCR = "";
-    private String resultTMA = "";
+    private String resultPCR = null;
+    private String resultTMA = null;
     private String sex = null;
     private Integer age = null;
     private String origin = null;
