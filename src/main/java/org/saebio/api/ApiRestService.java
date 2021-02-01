@@ -43,6 +43,7 @@ public class ApiRestService {
             int errorCount = 0;
             SampleService sampleService = new SampleService();
             if (!sampleService.tryConnection()) {
+                res.status(HttpStatus.InternalError());
                 return new Gson()
                         .toJson(new Response(HttpStatus.InternalError(), "Could not connect to database"));
             }
