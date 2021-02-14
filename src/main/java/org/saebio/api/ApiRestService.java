@@ -36,6 +36,9 @@ public class ApiRestService {
             res.type("application/json");
         });
 
+        SampleService test = new SampleService();
+        System.out.println(test.tryConnection());
+
         post("/insert-data", (req, res)-> {
             String body = req.body();
             CSVReader reader = new CSVReader(new StringReader(body));

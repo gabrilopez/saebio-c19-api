@@ -7,7 +7,9 @@ import java.time.LocalDate;
 
 public class SampleService {
     Connection conn = null;
-    String url = "jdbc:mysql://localhost:8889/metabase?serverTimezone=UTC&autoReconnect=true";
+    // String url = "jdbc:mysql://localhost:8889/metabase?serverTimezone=UTC&autoReconnect=true";
+    // TODO: Cambiar ruta del archivo
+    String url = "jdbc:sqlite:/Users/gabriellopez/Desktop/sqlite/metabase.db";
     String user = "root";
     String password = "root";
 
@@ -16,6 +18,7 @@ public class SampleService {
             Connection conn = this.getConnection();
             if (conn != null) return true;
         } catch (SQLException throwables) {
+            throwables.printStackTrace();
             return false;
         }
         return false;
@@ -27,6 +30,7 @@ public class SampleService {
                 conn = DriverManager.getConnection(url, user, password);
                 return conn;
             } catch (SQLException throwables) {
+                throwables.printStackTrace();
             }
         }
         return conn;
