@@ -162,9 +162,9 @@ public class ApiRestService {
     }
 
     private static Collection<File> getBackups() {
-        String route = SampleService.getDatabaseRoute() + "/backups/" ;
+        String route = SampleService.getDatabaseRoute();
         File directory = new File(route);
-        IOFileFilter suffixFileFilter = new SuffixFileFilter(new String[] {"db"});
-        return FileUtils.listFiles(directory, suffixFileFilter, null);
+        String[] suffixFileFilter = new String[] {"db"};
+        return FileUtils.listFiles(directory, suffixFileFilter, true);
     }
 }
