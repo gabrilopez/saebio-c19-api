@@ -1,18 +1,29 @@
 package org.saebio.api;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.opencsv.CSVReader;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.saebio.backup.Backup;
 import org.saebio.sample.Sample;
 import org.saebio.sample.SampleService;
 import spark.Filter;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -34,12 +45,10 @@ public class ApiRestService {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Methods", "POST");
             res.type("application/json");
+            System.gc();
         });
 
-        SampleService test = new SampleService();
-        System.out.println(test.tryConnection());
-
-        post("/insert-data", (req, res)-> {
+        post("/insert-data", (req, res) -> {
             String body = req.body();
             CSVReader reader = new CSVReader(new StringReader(body));
 
@@ -68,13 +77,21 @@ public class ApiRestService {
             String message = "[FINISHED]\nRead " + reader.getLinesRead() + "\tError count: " + errorCount;
             System.out.println(message);
             System.out.println("FINAL CACHE SIZE:" + cache.size());
-            System.gc();
 
             return new Gson()
                     .toJsonTree(new Response(HttpStatus.OK(), message));
         });
+
+        get("/backups", (req, res) -> {
+            Collection<Backup> backups = getBackups().stream()
+                                            .map(Backup::new)
+                                            .collect(Collectors.toList());
+            JsonElement jsonElement = new Gson().toJsonTree(backups);
+            return new Gson().toJsonTree(new Response(HttpStatus.OK(), backups.size() + " files found", jsonElement));
+        });
     }
 
+    /** MOVER A SAMPLE SERVICE? */
     private static Sample createSampleFromLine(String[] line) {
         // Length 8 mínima por ahora porque los campos resultadoTMA, sexo, edad, procedencia y motivo
         // pueden no estar seteados
@@ -131,5 +148,23 @@ public class ApiRestService {
 
     private static boolean isNumeric(String s) {
         return s.length() > 0 && s.chars().allMatch(Character::isDigit);
+    }
+
+    private static void createBackup(String fileName) {
+        String databaseRoute = SampleService.getDatabaseRoute();
+        File source = new File (databaseRoute + SampleService.getDatabaseFileName());
+        File destination = new File (databaseRoute + fileName + ".db");
+        try {
+            Files.copy(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Collection<File> getBackups() {
+        String route = SampleService.getDatabaseRoute() + "/backups/" ;
+        File directory = new File(route);
+        IOFileFilter suffixFileFilter = new SuffixFileFilter(new String[] {"db"});
+        return FileUtils.listFiles(directory, suffixFileFilter, null);
     }
 }

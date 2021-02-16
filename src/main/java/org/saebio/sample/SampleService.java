@@ -2,14 +2,18 @@ package org.saebio.sample;
 
 import org.saebio.api.HttpStatus;
 
+import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
 
 public class SampleService {
     Connection conn = null;
     // String url = "jdbc:mysql://localhost:8889/metabase?serverTimezone=UTC&autoReconnect=true";
-    // TODO: Cambiar ruta del archivo
-    String url = "jdbc:sqlite:/Users/gabriellopez/Desktop/sqlite/metabase.db";
+    // TODO: Cambiar ruta del archivo. Usar File separator para especificar la ruta
+        // File separator sirve para añadir las / o \ dependiendo del OS
+    static String databaseFileName = "metabase.db";
+    static String databaseRoute = "/Users/gabriellopez/Desktop/sqlite/";
+    String url = "jdbc:sqlite:" + databaseRoute + databaseFileName;
     String user = "root";
     String password = "root";
 
@@ -69,6 +73,7 @@ public class SampleService {
             preparedStatement.execute();
         } catch (SQLIntegrityConstraintViolationException e) {
         } catch (SQLException e) {
+            e.printStackTrace();
             System.out.println("Error with petition [" + sample.getPetition() + "]. Check this entry's data");
             return HttpStatus.BadRequest();
         } finally {
@@ -144,5 +149,51 @@ public class SampleService {
         return resultSet.wasNull() ? null : value;
     }
 
+    public int getRowCount() {
+        try {
+            PreparedStatement preparedStatement = getConnection().prepareStatement(
+                    "SELECT count(*) as row_count FROM Samples"
+            );
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt("row_count");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return 0;
+    }
 
+    public void vacuum() {
+        try {
+            Statement statement = getConnection().createStatement();
+            // Executes the given SQL statement, which may be an INSERT, UPDATE, or DELETE statement or an SQL statement
+            // that returns nothing, such as an SQL DDL statement.
+            statement.executeUpdate("VACUUM");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+    }
+
+    public void vacuumInto(String fileName) {
+        try {
+            Statement statement = getConnection().createStatement();
+            String route = databaseRoute + getRowCount() + "-" + fileName + ".db";
+            // Executes the given SQL statement, which may be an INSERT, UPDATE, or DELETE statement or an SQL statement
+            // that returns nothing, such as an SQL DDL statement.
+            statement.executeUpdate("VACUUM INTO '" + route + "'");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+    }
+
+    public static String getDatabaseRoute() {
+        return databaseRoute;
+    }
+
+    public static String getDatabaseFileName() {
+        return databaseFileName;
+    }
 }
