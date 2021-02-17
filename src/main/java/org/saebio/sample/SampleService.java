@@ -7,7 +7,7 @@ import java.sql.*;
 import java.time.LocalDate;
 
 public class SampleService {
-    Connection conn = null;
+    private static Connection conn = null;
     // String url = "jdbc:mysql://localhost:8889/metabase?serverTimezone=UTC&autoReconnect=true";
     // TODO: Cambiar ruta del archivo. Usar File separator para especificar la ruta
         // File separator sirve para añadir las / o \ dependiendo del OS
@@ -40,7 +40,7 @@ public class SampleService {
         return conn;
     }
 
-    private void closeConnection() {
+    public static void closeConnection() {
         if (conn != null) {
             try {
                 conn.close();

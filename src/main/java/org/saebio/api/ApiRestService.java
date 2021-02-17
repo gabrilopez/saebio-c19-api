@@ -2,6 +2,7 @@ package org.saebio.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -48,6 +49,37 @@ public class ApiRestService {
             System.gc();
         });
 
+        get("/backups", (req, res) -> {
+            Collection<Backup> backups = getBackups();
+            SampleService sampleService = new SampleService();
+            if (sampleService.tryConnection()) {
+                int currentDatabaseNumberOfRows = sampleService.getRowCount();
+                backups.forEach(backup -> {
+                    if (backup.getSelected()) backup.setRows(currentDatabaseNumberOfRows);
+                });
+            }
+            JsonElement jsonElement = new Gson().toJsonTree(backups);
+            return new Gson().toJsonTree(new Response(HttpStatus.OK(), backups.size() + " files found", jsonElement));
+        });
+
+        post("/change-database-to-backup", (req, res) -> {
+            Backup backup;
+            try {
+                backup = new Gson().fromJson(req.body(), Backup.class);
+            } catch (JsonParseException e) {
+                return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Object is not a backup"));
+            }
+            Collection<Backup> backups = getBackups();
+            if (backups.stream().anyMatch(b -> b.equals(backup))) {
+                if (changeDatabaseToBackup(backup)) {
+                    return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName()));
+                }
+            } else {
+                return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup file not found"));
+            }
+            return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Failed to replace database with existing backup. Try again later"));
+        });
+
         post("/insert-data", (req, res) -> {
             String body = req.body();
             CSVReader reader = new CSVReader(new StringReader(body));
@@ -80,14 +112,6 @@ public class ApiRestService {
 
             return new Gson()
                     .toJsonTree(new Response(HttpStatus.OK(), message));
-        });
-
-        get("/backups", (req, res) -> {
-            Collection<Backup> backups = getBackups().stream()
-                                            .map(Backup::new)
-                                            .collect(Collectors.toList());
-            JsonElement jsonElement = new Gson().toJsonTree(backups);
-            return new Gson().toJsonTree(new Response(HttpStatus.OK(), backups.size() + " files found", jsonElement));
         });
     }
 
@@ -161,10 +185,26 @@ public class ApiRestService {
         }
     }
 
-    private static Collection<File> getBackups() {
+    private static Collection<Backup> getBackups() {
         String route = SampleService.getDatabaseRoute();
         File directory = new File(route);
         String[] suffixFileFilter = new String[] {"db"};
-        return FileUtils.listFiles(directory, suffixFileFilter, true);
+        Collection<File> fileList = FileUtils.listFiles(directory, suffixFileFilter, true);
+        return fileList.stream()
+                .map(Backup::new)
+                .collect(Collectors.toList());
+    }
+
+    private static boolean changeDatabaseToBackup(Backup backup) {
+        SampleService.closeConnection();
+        Path from = backup.getBackupFile().toPath();
+        Path to = new File(SampleService.getDatabaseRoute() + SampleService.getDatabaseFileName()).toPath();
+        try {
+            Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
