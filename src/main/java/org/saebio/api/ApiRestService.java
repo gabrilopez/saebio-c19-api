@@ -42,10 +42,16 @@ public class ApiRestService {
 
     public static void main(String[] args) {
         // Filter after each request
-        after((Filter) (req, res) -> {
+        after((req, res) -> {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Methods", "POST");
             res.type("application/json");
+            try {
+                Response response = new Gson().fromJson(res.body(), Response.class);
+                if (response != null) res.status(response.getStatus());
+            } catch (JsonParseException e) {
+                // Do something
+            }
             System.gc();
         });
 
@@ -69,15 +75,47 @@ public class ApiRestService {
             } catch (JsonParseException e) {
                 return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Object is not a backup"));
             }
-            Collection<Backup> backups = getBackups();
-            if (backups.stream().anyMatch(b -> b.equals(backup))) {
+
+            if (backupExists(backup)) {
                 if (changeDatabaseToBackup(backup)) {
-                    return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName()));
+                    JsonElement jsonElement = new Gson().toJsonTree(getBackups());
+                    return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName(), jsonElement));
                 }
             } else {
                 return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup file not found"));
             }
             return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Failed to replace database with existing backup. Try again later"));
+        });
+
+        // TODO: REMOVE?
+        post("/force-backup", (req, res) ->  {
+            SampleService sampleService = new SampleService();
+            boolean success = sampleService.vacuumInto();
+            if (success) {
+                JsonElement jsonElement = new Gson().toJsonTree(getBackups());
+                String message = "Successfully generated backup";
+                return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
+            } else {
+                return new Gson().toJson(new Response(HttpStatus.InternalError(), "Error generating backup"));
+            }
+        });
+
+        post("/remove-backup", (req, res) -> {
+            Backup backup;
+            try {
+                backup = new Gson().fromJson(req.body(), Backup.class);
+                if (!backupExists(backup)) return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup does not exist"));
+                boolean removeSuccess = removeBackup(backup);
+                if (removeSuccess) {
+                    JsonElement jsonElement = new Gson().toJsonTree(getBackups());
+                    String message = "Successfully generated backup";
+                    return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
+                } else {
+                    return new Gson().toJson(new Response(HttpStatus.InternalError(), "Backup could not be removed"));
+                }
+            } catch (JsonParseException e) {
+                return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Object is not a backup"));
+            }
         });
 
         post("/insert-data", (req, res) -> {
@@ -197,7 +235,7 @@ public class ApiRestService {
 
     private static boolean changeDatabaseToBackup(Backup backup) {
         SampleService.closeConnection();
-        Path from = backup.getBackupFile().toPath();
+        Path from = new File(SampleService.getDatabaseRoute() + "backups/" + backup.getName()).toPath();
         Path to = new File(SampleService.getDatabaseRoute() + SampleService.getDatabaseFileName()).toPath();
         try {
             Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
@@ -206,5 +244,15 @@ public class ApiRestService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private static boolean removeBackup(Backup backup) {
+        File backupFile = new File(SampleService.getDatabaseRoute() + SampleService.getBackupsRoute() + backup.getName());
+        return FileUtils.deleteQuietly(backupFile);
+    }
+
+    private static boolean backupExists(Backup backup) {
+        Collection<Backup> backups = getBackups();
+        return (backups.stream().anyMatch(b -> b.equals(backup)));
     }
 }

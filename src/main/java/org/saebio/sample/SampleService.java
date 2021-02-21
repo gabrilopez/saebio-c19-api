@@ -2,9 +2,10 @@ package org.saebio.sample;
 
 import org.saebio.api.HttpStatus;
 
-import java.nio.file.Files;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.Date;
 
 public class SampleService {
     private static Connection conn = null;
@@ -13,6 +14,7 @@ public class SampleService {
         // File separator sirve para añadir las / o \ dependiendo del OS
     static String databaseFileName = "metabase.db";
     static String databaseRoute = "/Users/gabriellopez/Desktop/sqlite/";
+    static String backupsRoute = "backups/";
     String url = "jdbc:sqlite:" + databaseRoute + databaseFileName;
     String user = "root";
     String password = "root";
@@ -86,8 +88,7 @@ public class SampleService {
         try {
             PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT * FROM Samples WHERE NHC = ?");
             preparedStatement.setString(1, NHC);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            return resultSet;
+            return preparedStatement.executeQuery();
         } catch (SQLException e) {
             return null;
         } finally {
@@ -158,6 +159,8 @@ public class SampleService {
             if (resultSet.next()) return resultSet.getInt("row_count");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+        } finally {
+            closeConnection();
         }
         return 0;
     }
@@ -175,18 +178,21 @@ public class SampleService {
         }
     }
 
-    public void vacuumInto(String fileName) {
+    public boolean vacuumInto() {
         try {
+            String timeStamp = new SimpleDateFormat("dd-MM-yyyy HH.mm.ss").format(new Date());
+            String route = databaseRoute + backupsRoute + getRowCount() + " " + timeStamp + ".db";
             Statement statement = getConnection().createStatement();
-            String route = databaseRoute + getRowCount() + "-" + fileName + ".db";
             // Executes the given SQL statement, which may be an INSERT, UPDATE, or DELETE statement or an SQL statement
             // that returns nothing, such as an SQL DDL statement.
             statement.executeUpdate("VACUUM INTO '" + route + "'");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            return false;
         } finally {
             closeConnection();
         }
+        return true;
     }
 
     public static String getDatabaseRoute() {
@@ -196,4 +202,6 @@ public class SampleService {
     public static String getDatabaseFileName() {
         return databaseFileName;
     }
+
+    public static String getBackupsRoute() { return backupsRoute; }
 }
