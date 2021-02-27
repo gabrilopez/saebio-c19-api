@@ -51,7 +51,7 @@ public class SampleService {
         }
     }
 
-    public int addSample(Sample sample) {
+    public boolean addSample(Sample sample) {
         try {
             PreparedStatement preparedStatement = getConnection().prepareStatement("INSERT INTO Samples " +
                     "(registryDate, patientName, patientSurname, birthDate, NHC, petition, service, criteria, resultPCR, resultTMA, sex, age, origin, reason, episode)" +
@@ -75,13 +75,13 @@ public class SampleService {
             preparedStatement.execute();
         } catch (SQLIntegrityConstraintViolationException e) {
         } catch (SQLException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             System.out.println("Error with petition [" + sample.getPetition() + "]. Check this entry's data");
-            return HttpStatus.BadRequest();
+            return false;
         } finally {
             closeConnection();
         }
-        return HttpStatus.OK();
+        return true;
     }
 
     public ResultSet getSamplesByNHC(String NHC) {

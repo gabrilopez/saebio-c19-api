@@ -18,6 +18,11 @@ public class Response {
         this.data = data;
     }
 
+    public Response(int status, JsonElement data) {
+        this.status = status;
+        this.data = data;
+    }
+
     public int getStatus() {
         return status;
     }

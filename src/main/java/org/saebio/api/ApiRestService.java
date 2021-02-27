@@ -3,28 +3,21 @@ package org.saebio.api;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.opencsv.CSVReader;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.saebio.backup.Backup;
+import org.saebio.backup.BackupService;
 import org.saebio.sample.Sample;
 import org.saebio.sample.SampleService;
-import spark.Filter;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.Part;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static spark.Spark.*;
 
@@ -56,7 +49,7 @@ public class ApiRestService {
         });
 
         get("/backups", (req, res) -> {
-            Collection<Backup> backups = getBackups();
+            Collection<Backup> backups = BackupService.getBackups();
             SampleService sampleService = new SampleService();
             if (sampleService.tryConnection()) {
                 int currentDatabaseNumberOfRows = sampleService.getRowCount();
@@ -76,9 +69,9 @@ public class ApiRestService {
                 return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Object is not a backup"));
             }
 
-            if (backupExists(backup)) {
-                if (changeDatabaseToBackup(backup)) {
-                    JsonElement jsonElement = new Gson().toJsonTree(getBackups());
+            if (BackupService.backupExists(backup)) {
+                if (BackupService.changeDatabaseToBackup(backup)) {
+                    JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                     return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName(), jsonElement));
                 }
             } else {
@@ -92,7 +85,7 @@ public class ApiRestService {
             SampleService sampleService = new SampleService();
             boolean success = sampleService.vacuumInto();
             if (success) {
-                JsonElement jsonElement = new Gson().toJsonTree(getBackups());
+                JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                 String message = "Successfully generated backup";
                 return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
             } else {
@@ -104,10 +97,10 @@ public class ApiRestService {
             Backup backup;
             try {
                 backup = new Gson().fromJson(req.body(), Backup.class);
-                if (!backupExists(backup)) return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup does not exist"));
-                boolean removeSuccess = removeBackup(backup);
+                if (!BackupService.backupExists(backup)) return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup does not exist"));
+                boolean removeSuccess = BackupService.removeBackup(backup);
                 if (removeSuccess) {
-                    JsonElement jsonElement = new Gson().toJsonTree(getBackups());
+                    JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                     String message = "Successfully generated backup";
                     return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
                 } else {
@@ -119,10 +112,10 @@ public class ApiRestService {
         });
 
         post("/insert-data", (req, res) -> {
-            String body = req.body();
-            CSVReader reader = new CSVReader(new StringReader(body));
+            MultipartConfigElement tmp = new MultipartConfigElement("/tmp");
+            req.attribute("org.eclipse.jetty.multipartConfig", tmp);
+            Part filePart = req.raw().getPart("file");
 
-            int errorCount = 0;
             SampleService sampleService = new SampleService();
             if (!sampleService.tryConnection()) {
                 res.status(HttpStatus.InternalError());
@@ -130,6 +123,35 @@ public class ApiRestService {
                         .toJson(new Response(HttpStatus.InternalError(), "Could not connect to database"));
             }
 
+            InputStream inputStream = filePart.getInputStream();
+            Stream<String> stream = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+                                        .lines();
+
+            int size = 0;
+            int errorCount = 0;
+            for (String line : (Iterable<String>) stream::iterator) {
+                Sample sample = handleSampleLine(line);
+                if (sample == null) {
+                    errorCount++;
+                    System.out.println("Please check row: " + line);
+                } else {
+                    errorCount += sampleService.addSample(sample) ? 0 : 1;
+                }
+                size++;
+            }
+            stream.close();
+
+            Map<String, String> response = new HashMap<>();
+            response.put("size", String.valueOf(size));
+            response.put("added", String.valueOf(size - errorCount));
+            response.put("errors", String.valueOf(errorCount));
+
+            return new Gson()
+                    .toJsonTree(new Response(HttpStatus.OK(), new Gson().toJsonTree(response)));
+
+            // int errorCount = 0;
+
+            /*
             String[] line;
             while ((line = reader.readNext()) != null) {
                 String temp = Arrays.toString(line);
@@ -150,7 +172,14 @@ public class ApiRestService {
 
             return new Gson()
                     .toJsonTree(new Response(HttpStatus.OK(), message));
+
+             */
         });
+    }
+
+    private static Sample handleSampleLine(String line) {
+        String[] data = line.split(";");
+        return createSampleFromLine(data);
     }
 
     /** MOVER A SAMPLE SERVICE? */
@@ -185,7 +214,7 @@ public class ApiRestService {
         return sample;
     }
 
-    private static int getSampleEpisodeNumber(Sample newSample) {
+    public static int getSampleEpisodeNumber(Sample newSample) {
         // Old sample will always be the first sample from current episode
         String NHC = newSample.getNHC();
         Sample oldSample = cache.getOrDefault(NHC, null);
@@ -210,49 +239,5 @@ public class ApiRestService {
 
     private static boolean isNumeric(String s) {
         return s.length() > 0 && s.chars().allMatch(Character::isDigit);
-    }
-
-    private static void createBackup(String fileName) {
-        String databaseRoute = SampleService.getDatabaseRoute();
-        File source = new File (databaseRoute + SampleService.getDatabaseFileName());
-        File destination = new File (databaseRoute + fileName + ".db");
-        try {
-            Files.copy(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static Collection<Backup> getBackups() {
-        String route = SampleService.getDatabaseRoute();
-        File directory = new File(route);
-        String[] suffixFileFilter = new String[] {"db"};
-        Collection<File> fileList = FileUtils.listFiles(directory, suffixFileFilter, true);
-        return fileList.stream()
-                .map(Backup::new)
-                .collect(Collectors.toList());
-    }
-
-    private static boolean changeDatabaseToBackup(Backup backup) {
-        SampleService.closeConnection();
-        Path from = new File(SampleService.getDatabaseRoute() + "backups/" + backup.getName()).toPath();
-        Path to = new File(SampleService.getDatabaseRoute() + SampleService.getDatabaseFileName()).toPath();
-        try {
-            Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private static boolean removeBackup(Backup backup) {
-        File backupFile = new File(SampleService.getDatabaseRoute() + SampleService.getBackupsRoute() + backup.getName());
-        return FileUtils.deleteQuietly(backupFile);
-    }
-
-    private static boolean backupExists(Backup backup) {
-        Collection<Backup> backups = getBackups();
-        return (backups.stream().anyMatch(b -> b.equals(backup)));
     }
 }
