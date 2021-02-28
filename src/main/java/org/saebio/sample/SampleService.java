@@ -54,8 +54,8 @@ public class SampleService {
     public boolean addSample(Sample sample) {
         try {
             PreparedStatement preparedStatement = getConnection().prepareStatement("INSERT INTO Samples " +
-                    "(registryDate, patientName, patientSurname, birthDate, NHC, petition, service, criteria, resultPCR, resultTMA, sex, age, origin, reason, episode)" +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "(registryDate, patientName, patientSurname, birthDate, NHC, petition, service, criteria, resultPCR, resultTMA, sex, age, origin, reason, variant, lineage, episode)" +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             preparedStatement.setObject(1, sample.getRegistryDate());
             preparedStatement.setString(2, sample.getPatientName());
             preparedStatement.setString(3, sample.getPatientSurname());
@@ -70,7 +70,9 @@ public class SampleService {
             preparedStatement.setObject(12, sample.getAge(), Types.INTEGER);
             preparedStatement.setString(13, sample.getOrigin());
             preparedStatement.setString(14, sample.getReason());
-            preparedStatement.setInt(15, sample.getEpisode());
+            preparedStatement.setString(15, sample.getVariant());
+            preparedStatement.setString(16, sample.getLineage());
+            preparedStatement.setInt(17, sample.getEpisode());
 
             preparedStatement.execute();
         } catch (SQLIntegrityConstraintViolationException e) {
@@ -135,6 +137,8 @@ public class SampleService {
             sample.setAge(getInteger(resultSet, "age"));
             sample.setOrigin(resultSet.getString("origin"));
             sample.setReason(resultSet.getString("reason"));
+            sample.setVariant(resultSet.getString("variant"));
+            sample.setLineage(resultSet.getString("lineage"));
             sample.setEpisode(resultSet.getInt("episode"));
         } catch (SQLException e) {
             return null;

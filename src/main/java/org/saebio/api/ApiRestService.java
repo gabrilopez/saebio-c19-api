@@ -71,6 +71,7 @@ public class ApiRestService {
 
             if (BackupService.backupExists(backup)) {
                 if (BackupService.changeDatabaseToBackup(backup)) {
+                    cache.clear();
                     JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                     return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName(), jsonElement));
                 }
@@ -140,10 +141,12 @@ public class ApiRestService {
                 size++;
             }
             stream.close();
+            int added = size - errorCount;
+            if (added > 0) sampleService.vacuumInto();
 
             Map<String, String> response = new HashMap<>();
             response.put("size", String.valueOf(size));
-            response.put("added", String.valueOf(size - errorCount));
+            response.put("added", String.valueOf(added));
             response.put("errors", String.valueOf(errorCount));
 
             return new Gson()
@@ -205,6 +208,8 @@ public class ApiRestService {
             if (line.length > 11) sample.setAge(isNumeric(line[11]) ? Integer.valueOf(line[11]) : null);
             if (line.length > 12) sample.setOrigin(!line[12].trim().isEmpty() ? line[12] : null);
             if (line.length > 13) sample.setReason(!line[13].trim().isEmpty() ? line[13] : null);
+            if (line.length > 14) sample.setVariant(!line[14].trim().isEmpty() ? line[14] : null);
+            if (line.length > 15) sample.setLineage(!line[15].trim().isEmpty() ? line[15] : null);
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
             e.printStackTrace();

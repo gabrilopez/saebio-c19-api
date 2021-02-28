@@ -19,6 +19,8 @@ public class Sample {
     private Integer age = null;
     private String origin = null;
     private String reason = null;
+    private String variant = null;
+    private String lineage = null;
     private int episode;
 
     public LocalDate getRegistryDate() {
@@ -139,6 +141,22 @@ public class Sample {
 
     public void setEpisode(int episode) {
         this.episode = episode;
+    }
+
+    public String getVariant() {
+        return variant;
+    }
+
+    public void setVariant(String variant) {
+        this.variant = variant;
+    }
+
+    public String getLineage() {
+        return lineage;
+    }
+
+    public void setLineage(String lineage) {
+        this.lineage = lineage;
     }
 
     public boolean belongToSameEpisode(Sample oldSample) {
