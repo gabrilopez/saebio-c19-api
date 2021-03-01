@@ -16,22 +16,16 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 import java.util.stream.Stream;
 
 import static spark.Spark.*;
 
 public class ApiRestService {
-    private static DateTimeFormatter birthDateFormatter = DateTimeFormatter
-            .ofPattern("dd.MM.yyyy")
-            .withLocale(Locale.ENGLISH);
-    private static DateTimeFormatter registryDateFormatter = DateTimeFormatter
-            .ofPattern("[d-M-yy][dd-MM-yy][dd-M-yy][d-MM-yy]");
-            /*
-    private static DateTimeFormatter registryDateFormatter = DateTimeFormatter
-            .ofPattern("d-M-yy")
-            .withLocale(Locale.ENGLISH);*/
-    private static Map<String, Sample> cache = new HashMap<>();
+    private static DateTimeFormatter dateTimeFormatter = createDateTimeFormatter();
+
+    private static final Map<String, Sample> cache = new HashMap<>();
 
     public static void main(String[] args) {
         // Filter after each request
@@ -192,10 +186,10 @@ public class ApiRestService {
         if (line.length < 9) return null;
         Sample sample = new Sample();
         try {
-            sample.setRegistryDate(LocalDate.parse(line[0].split(" ")[0].replace('/', '-'), registryDateFormatter));
+            sample.setRegistryDate(LocalDate.parse(line[0].split(" ")[0], dateTimeFormatter));
             sample.setPatientName(line[1]);
             sample.setPatientSurname(line[2]);
-            sample.setBirthDate(LocalDate.parse(line[3], birthDateFormatter));
+            sample.setBirthDate(LocalDate.parse(line[3], dateTimeFormatter));
             sample.setNHC(line[4]);
             sample.setPetition(Integer.parseInt(line[5]));
             sample.setService(line[6]);
@@ -244,5 +238,14 @@ public class ApiRestService {
 
     private static boolean isNumeric(String s) {
         return s.length() > 0 && s.chars().allMatch(Character::isDigit);
+    }
+
+    private static DateTimeFormatter createDateTimeFormatter() {
+        String dateFormatterPatterns = "[d[d]-M[M]-yyyy][d[d]-M[M]-yy]";
+        String patterns = dateFormatterPatterns + " " + dateFormatterPatterns.replaceAll("-", "/") + " " + dateFormatterPatterns.replaceAll("-", ".");
+        DateTimeFormatterBuilder dateTimeFormatterBuilder = new DateTimeFormatterBuilder();
+        Arrays.stream(patterns.split(" "))
+                .forEach(p -> dateTimeFormatterBuilder.appendPattern(p));
+        return dateTimeFormatterBuilder.toFormatter();
     }
 }
