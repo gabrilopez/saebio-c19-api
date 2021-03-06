@@ -2,6 +2,7 @@ package org.saebio.backup;
 
 import org.apache.commons.io.FileUtils;
 import org.saebio.sample.SampleService;
+import org.saebio.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,11 +28,15 @@ public class Backup {
             int separatorSpaceIndex = name.indexOf(' ');
             if (separatorSpaceIndex > 0) {
                 String rows = this.name.substring(0, separatorSpaceIndex);
-                if (isNumeric(rows)) this.rows = Integer.parseInt(rows);
+                if (Utils.isNumeric(rows)) this.rows = Integer.parseInt(rows);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
     }
 
     public String getName() {
@@ -60,9 +65,5 @@ public class Backup {
                 && backup.size.equals(this.size)
                 && backup.createdAt.equals(this.createdAt)
                 && backup.selected.equals(this.selected));
-    }
-
-    private static boolean isNumeric(String s) {
-        return s.length() > 0 && s.chars().allMatch(Character::isDigit);
     }
 }

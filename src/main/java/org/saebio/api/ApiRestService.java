@@ -14,19 +14,12 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 import java.util.stream.Stream;
 
 import static spark.Spark.*;
 
 public class ApiRestService {
-    private static DateTimeFormatter dateTimeFormatter = createDateTimeFormatter();
-
-    private static final Map<String, Sample> cache = new HashMap<>();
-
     public static void main(String[] args) {
         // Filter after each request
         after((req, res) -> {
@@ -65,7 +58,7 @@ public class ApiRestService {
 
             if (BackupService.backupExists(backup)) {
                 if (BackupService.changeDatabaseToBackup(backup)) {
-                    cache.clear();
+                    SampleService.clearCache();
                     JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                     return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName(), jsonElement));
                 }
@@ -80,6 +73,10 @@ public class ApiRestService {
             SampleService sampleService = new SampleService();
             boolean success = sampleService.vacuumInto();
             if (success) {
+                // If backups > 14, remove oldest backup
+                Collection<Backup> backups = BackupService.getBackups();
+                if (backups.size() > 14) BackupService.removeOldestBackup();
+
                 JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                 String message = "Successfully generated backup";
                 return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
@@ -120,12 +117,12 @@ public class ApiRestService {
 
             InputStream inputStream = filePart.getInputStream();
             Stream<String> stream = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-                                        .lines();
+                                        .lines().skip(1);
 
             int size = 0;
             int errorCount = 0;
             for (String line : (Iterable<String>) stream::iterator) {
-                Sample sample = handleSampleLine(line);
+                Sample sample = SampleService.handleSampleLine(line);
                 if (sample == null) {
                     errorCount++;
                     System.out.println("Please check row: " + line);
@@ -138,6 +135,10 @@ public class ApiRestService {
             int added = size - errorCount;
             if (added > 0) sampleService.vacuumInto();
 
+            // If backups > 14, remove oldest backup
+            Collection<Backup> backups = BackupService.getBackups();
+            if (backups.size() > 14) BackupService.removeOldestBackup();
+
             Map<String, String> response = new HashMap<>();
             response.put("size", String.valueOf(size));
             response.put("added", String.valueOf(added));
@@ -145,107 +146,6 @@ public class ApiRestService {
 
             return new Gson()
                     .toJsonTree(new Response(HttpStatus.OK(), new Gson().toJsonTree(response)));
-
-            // int errorCount = 0;
-
-            /*
-            String[] line;
-            while ((line = reader.readNext()) != null) {
-                String temp = Arrays.toString(line);
-                temp = temp.substring(1, temp.length() - 1);
-                String[] data = temp.split(";");
-                Sample sample = createSampleFromLine(data);
-                if (sample == null) {
-                    errorCount++;
-                    System.out.println("Please check row: " + temp);
-                } else {
-                    errorCount += (sampleService.addSample(sample) == HttpStatus.OK()) ? 0 : 1;
-                }
-            }
-
-            String message = "[FINISHED]\nRead " + reader.getLinesRead() + "\tError count: " + errorCount;
-            System.out.println(message);
-            System.out.println("FINAL CACHE SIZE:" + cache.size());
-
-            return new Gson()
-                    .toJsonTree(new Response(HttpStatus.OK(), message));
-
-             */
         });
-    }
-
-    private static Sample handleSampleLine(String line) {
-        String[] data = line.split(";");
-        return createSampleFromLine(data);
-    }
-
-    /** MOVER A SAMPLE SERVICE? */
-    private static Sample createSampleFromLine(String[] line) {
-        // Length 8 mínima por ahora porque los campos resultadoTMA, sexo, edad, procedencia y motivo
-        // pueden no estar seteados
-        if (line.length < 9) return null;
-        Sample sample = new Sample();
-        try {
-            sample.setRegistryDate(LocalDate.parse(line[0].split(" ")[0], dateTimeFormatter));
-            sample.setPatientName(line[1]);
-            sample.setPatientSurname(line[2]);
-            sample.setBirthDate(LocalDate.parse(line[3], dateTimeFormatter));
-            sample.setNHC(line[4]);
-            sample.setPetition(Integer.parseInt(line[5]));
-            sample.setService(line[6]);
-            sample.setCriteria(line[7]);
-            if (!line[8].trim().isEmpty()) sample.setResultPCR(line[8]);
-
-            // El hospital doctor negrín está trabajando en implementar estos campos
-            if (line.length > 9 && !line[9].trim().isEmpty()) sample.setResultTMA(line[9]);
-            if (line.length > 10) sample.setSex(!line[10].trim().isEmpty() ? line[10] : null);
-            if (line.length > 11) sample.setAge(isNumeric(line[11]) ? Integer.valueOf(line[11]) : null);
-            if (line.length > 12) sample.setOrigin(!line[12].trim().isEmpty() ? line[12] : null);
-            if (line.length > 13) sample.setReason(!line[13].trim().isEmpty() ? line[13] : null);
-            if (line.length > 14) sample.setVariant(!line[14].trim().isEmpty() ? line[14] : null);
-            if (line.length > 15) sample.setLineage(!line[15].trim().isEmpty() ? line[15] : null);
-            sample.setEpisode(getSampleEpisodeNumber(sample));
-        } catch(Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-        updateSampleCache(sample);
-        return sample;
-    }
-
-    public static int getSampleEpisodeNumber(Sample newSample) {
-        // Old sample will always be the first sample from current episode
-        String NHC = newSample.getNHC();
-        Sample oldSample = cache.getOrDefault(NHC, null);
-
-        if (oldSample == null) {
-            SampleService sampleService = new SampleService();
-            oldSample = sampleService.getFirstSampleFromCurrentEpisode(NHC);
-            if (oldSample == null) return 1;
-            // Save old sample found in database to cache
-            cache.put(NHC, oldSample);
-        }
-        return newSample.belongToSameEpisode(oldSample) ? oldSample.getEpisode() : oldSample.getEpisode() + 1;
-    }
-
-    private static void updateSampleCache(Sample newSample) {
-        String NHC = newSample.getNHC();
-        Sample oldSample = cache.getOrDefault(NHC, null);
-        if (oldSample == null || oldSample.getEpisode() < newSample.getEpisode()) {
-            cache.put(NHC, newSample);
-        }
-    }
-
-    private static boolean isNumeric(String s) {
-        return s.length() > 0 && s.chars().allMatch(Character::isDigit);
-    }
-
-    private static DateTimeFormatter createDateTimeFormatter() {
-        String dateFormatterPatterns = "[d[d]-M[M]-yyyy][d[d]-M[M]-yy]";
-        String patterns = dateFormatterPatterns + " " + dateFormatterPatterns.replaceAll("-", "/") + " " + dateFormatterPatterns.replaceAll("-", ".");
-        DateTimeFormatterBuilder dateTimeFormatterBuilder = new DateTimeFormatterBuilder();
-        Arrays.stream(patterns.split(" "))
-                .forEach(p -> dateTimeFormatterBuilder.appendPattern(p));
-        return dateTimeFormatterBuilder.toFormatter();
     }
 }
