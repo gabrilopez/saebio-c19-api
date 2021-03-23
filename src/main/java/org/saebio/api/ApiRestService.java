@@ -3,6 +3,7 @@ package org.saebio.api;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import org.saebio.backup.Backup;
 import org.saebio.backup.BackupService;
 import org.saebio.sample.Sample;
@@ -29,8 +30,7 @@ public class ApiRestService {
             try {
                 Response response = new Gson().fromJson(res.body(), Response.class);
                 if (response != null) res.status(response.getStatus());
-            } catch (JsonParseException e) {
-                // Do something
+            } catch (JsonSyntaxException ignored) {
             }
             System.gc();
         });
@@ -119,31 +119,30 @@ public class ApiRestService {
             Stream<String> stream = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
                                         .lines().skip(1);
 
-            int size = 0;
-            int errorCount = 0;
+            int count = 0;
+            List<Integer> errorLines = new ArrayList<>();
             for (String line : (Iterable<String>) stream::iterator) {
                 Sample sample = SampleService.handleSampleLine(line);
                 if (sample == null) {
-                    errorCount++;
-                    System.out.println("Please check row: " + line);
+                    errorLines.add(count + 1);
                 } else {
-                    errorCount += sampleService.addSample(sample) ? 0 : 1;
+                    if (!sampleService.addSample(sample)) errorLines.add(count + 1);
                 }
-                size++;
+                count++;
             }
             stream.close();
-            int added = size - errorCount;
+            int added = count - errorLines.size();
             if (added > 0) sampleService.vacuumInto();
 
             // If backups > 14, remove oldest backup
             Collection<Backup> backups = BackupService.getBackups();
             if (backups.size() > 14) BackupService.removeOldestBackup();
 
-            Map<String, String> response = new HashMap<>();
-            response.put("size", String.valueOf(size));
-            response.put("added", String.valueOf(added));
-            response.put("errors", String.valueOf(errorCount));
-
+            Map<String, Object> response = new HashMap<>();
+            response.put("size", count);
+            response.put("added", added);
+            response.put("errors", errorLines.size());
+            response.put("errorLines", errorLines.toString());
             return new Gson()
                     .toJsonTree(new Response(HttpStatus.OK(), new Gson().toJsonTree(response)));
         });
