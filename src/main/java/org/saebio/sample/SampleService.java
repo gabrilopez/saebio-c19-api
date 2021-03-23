@@ -80,7 +80,6 @@ public class SampleService {
             preparedStatement.execute();
         } catch (SQLIntegrityConstraintViolationException e) {
         } catch (SQLException e) {
-            // e.printStackTrace();
             System.out.println("Error with petition [" + sample.getPetition() + "]. Check this entry's data");
             return false;
         } finally {
@@ -250,6 +249,5 @@ public class SampleService {
 
     public static void clearCache() {
         cache.clear();
-        System.out.println("CACHE LENGTH IS:" + cache.size());
     }
 }

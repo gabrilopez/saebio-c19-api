@@ -68,7 +68,7 @@ public class ApiRestService {
             return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Failed to replace database with existing backup. Try again later"));
         });
 
-        // TODO: REMOVE?
+
         post("/force-backup", (req, res) ->  {
             SampleService sampleService = new SampleService();
             boolean success = sampleService.vacuumInto();
