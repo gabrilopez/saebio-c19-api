@@ -1,13 +1,14 @@
 package org.saebio.api;
 
 import com.google.gson.Gson;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import org.saebio.backup.Backup;
 import org.saebio.backup.BackupService;
 import org.saebio.sample.Sample;
 import org.saebio.sample.SampleService;
+import org.saebio.utils.JsonTransformer;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
@@ -27,11 +28,6 @@ public class ApiRestService {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Methods", "POST");
             res.type("application/json");
-            try {
-                Response response = new Gson().fromJson(res.body(), Response.class);
-                if (response != null) res.status(response.getStatus());
-            } catch (JsonSyntaxException ignored) {
-            }
             System.gc();
         });
 
@@ -45,28 +41,35 @@ public class ApiRestService {
                 });
             }
             JsonElement jsonElement = new Gson().toJsonTree(backups);
-            return new Gson().toJsonTree(new Response(HttpStatus.OK(), backups.size() + " files found", jsonElement));
-        });
+            res.status(HttpStatus.OK());
+            return new Response(backups.size() + " files found", jsonElement);
+        }, new JsonTransformer());
 
         post("/change-database-to-backup", (req, res) -> {
             Backup backup;
             try {
                 backup = new Gson().fromJson(req.body(), Backup.class);
             } catch (JsonParseException e) {
-                return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Object is not a backup"));
+                res.status(HttpStatus.BadRequest());
+                return new Response("Object is not a backup");
             }
 
             if (BackupService.backupExists(backup)) {
                 if (BackupService.changeDatabaseToBackup(backup)) {
                     SampleService.clearCache();
                     JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-                    return new Gson().toJson(new Response(HttpStatus.OK(), "Successfully changed database to backup " + backup.getName(), jsonElement));
+
+                    res.status(HttpStatus.OK());
+                    return new Response("Successfully changed database to backup " + backup.getName(), jsonElement);
                 }
             } else {
-                return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup file not found"));
+                res.status(HttpStatus.BadRequest());
+                return new Response("Backup file not found");
             }
-            return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Failed to replace database with existing backup. Try again later"));
-        });
+
+            res.status(HttpStatus.BadRequest());
+            return new Response("Failed to replace database with existing backup. Try again later");
+        }, new JsonTransformer());
 
 
         post("/force-backup", (req, res) ->  {
@@ -79,29 +82,38 @@ public class ApiRestService {
 
                 JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
                 String message = "Successfully generated backup";
-                return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
+                res.status(HttpStatus.Created());
+                return new Response(message, jsonElement);
             } else {
-                return new Gson().toJson(new Response(HttpStatus.InternalError(), "Error generating backup"));
+                res.status(HttpStatus.InternalError());
+                return new Response("Error generating backup");
             }
-        });
+        }, new JsonTransformer());
 
         post("/remove-backup", (req, res) -> {
             Backup backup;
             try {
                 backup = new Gson().fromJson(req.body(), Backup.class);
-                if (!BackupService.backupExists(backup)) return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Backup does not exist"));
+                if (!BackupService.backupExists(backup)) {
+                    res.status(HttpStatus.BadRequest());
+                    return new Response("Backup does not exist");
+                }
                 boolean removeSuccess = BackupService.removeBackup(backup);
                 if (removeSuccess) {
                     JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-                    String message = "Successfully generated backup";
-                    return new Gson().toJsonTree(new Response(HttpStatus.OK(), message, jsonElement));
+                    String message = "Successfully removed backup";
+
+                    res.status(HttpStatus.OK());
+                    return new Response(message, jsonElement);
                 } else {
-                    return new Gson().toJson(new Response(HttpStatus.InternalError(), "Backup could not be removed"));
+                    res.status(HttpStatus.InternalError());
+                    return new Response("Backup could not be removed");
                 }
             } catch (JsonParseException e) {
-                return new Gson().toJson(new Response(HttpStatus.BadRequest(), "Object is not a backup"));
+                res.status(HttpStatus.BadRequest());
+                return new Response("Object is not a backup");
             }
-        });
+        }, new JsonTransformer());
 
         post("/insert-data", (req, res) -> {
             MultipartConfigElement tmp = new MultipartConfigElement("/tmp");
@@ -111,8 +123,7 @@ public class ApiRestService {
             SampleService sampleService = new SampleService();
             if (!sampleService.tryConnection()) {
                 res.status(HttpStatus.InternalError());
-                return new Gson()
-                        .toJson(new Response(HttpStatus.InternalError(), "Could not connect to database"));
+                return new Response("Could not connect to database");
             }
 
             InputStream inputStream = filePart.getInputStream();
@@ -143,8 +154,8 @@ public class ApiRestService {
             response.put("added", added);
             response.put("errors", errorLines.size());
             response.put("errorLines", errorLines.toString());
-            return new Gson()
-                    .toJsonTree(new Response(HttpStatus.OK(), new Gson().toJsonTree(response)));
-        });
+            res.status(HttpStatus.OK());
+            return new Response(new Gson().toJsonTree(response));
+        }, new JsonTransformer());
     }
 }
