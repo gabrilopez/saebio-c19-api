@@ -1,12 +1,15 @@
 package org.saebio.api;
 
 import com.google.gson.Gson;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import org.saebio.backup.Backup;
+import org.saebio.backup.BackupApiConstants;
 import org.saebio.backup.BackupService;
+import org.saebio.requesthandler.backup.CreateBackupHandler;
+import org.saebio.requesthandler.backup.GetBackupsHandler;
 import org.saebio.sample.Sample;
+import org.saebio.sample.SampleApiConstants;
 import org.saebio.sample.SampleService;
 import org.saebio.utils.JsonTransformer;
 
@@ -31,19 +34,7 @@ public class ApiRestService {
             System.gc();
         });
 
-        get("/backups", (req, res) -> {
-            Collection<Backup> backups = BackupService.getBackups();
-            SampleService sampleService = new SampleService();
-            if (sampleService.tryConnection()) {
-                int currentDatabaseNumberOfRows = sampleService.getRowCount();
-                backups.forEach(backup -> {
-                    if (backup.getSelected()) backup.setRows(currentDatabaseNumberOfRows);
-                });
-            }
-            JsonElement jsonElement = new Gson().toJsonTree(backups);
-            res.status(HttpStatus.OK());
-            return new Response(backups.size() + " files found", jsonElement);
-        }, new JsonTransformer());
+        get("/backups", new GetBackupsHandler());
 
         post("/change-database-to-backup", (req, res) -> {
             Backup backup;
@@ -51,7 +42,7 @@ public class ApiRestService {
                 backup = new Gson().fromJson(req.body(), Backup.class);
             } catch (JsonParseException e) {
                 res.status(HttpStatus.BadRequest());
-                return new Response("Object is not a backup");
+                return new Answer(BackupApiConstants.ERROR_PROVIDED_OBJECT_IS_NOT_A_BACKUP);
             }
 
             if (BackupService.backupExists(backup)) {
@@ -60,35 +51,19 @@ public class ApiRestService {
                     JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
 
                     res.status(HttpStatus.OK());
-                    return new Response("Successfully changed database to backup " + backup.getName(), jsonElement);
+                    return new Answer(BackupApiConstants.SUCCESSFULLY_CHANGED_DATABASE_TO_BACKUP + " " + backup.getName(), jsonElement);
                 }
             } else {
                 res.status(HttpStatus.BadRequest());
-                return new Response("Backup file not found");
+                return new Answer(BackupApiConstants.ERROR_BACKUP_FILE_NOT_FOUND);
             }
 
             res.status(HttpStatus.BadRequest());
-            return new Response("Failed to replace database with existing backup. Try again later");
+            return new Answer(BackupApiConstants.ERROR_FAILED_REPLACE_DATABASE_WITH_BACKUP);
         }, new JsonTransformer());
 
 
-        post("/force-backup", (req, res) ->  {
-            SampleService sampleService = new SampleService();
-            boolean success = sampleService.vacuumInto();
-            if (success) {
-                // If backups > 14, remove oldest backup
-                Collection<Backup> backups = BackupService.getBackups();
-                if (backups.size() > 14) BackupService.removeOldestBackup();
-
-                JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-                String message = "Successfully generated backup";
-                res.status(HttpStatus.Created());
-                return new Response(message, jsonElement);
-            } else {
-                res.status(HttpStatus.InternalError());
-                return new Response("Error generating backup");
-            }
-        }, new JsonTransformer());
+        post("/create-backup", new CreateBackupHandler());
 
         post("/remove-backup", (req, res) -> {
             Backup backup;
@@ -96,22 +71,20 @@ public class ApiRestService {
                 backup = new Gson().fromJson(req.body(), Backup.class);
                 if (!BackupService.backupExists(backup)) {
                     res.status(HttpStatus.BadRequest());
-                    return new Response("Backup does not exist");
+                    return new Answer(BackupApiConstants.ERROR_BACKUP_DOES_NOT_EXIST);
                 }
                 boolean removeSuccess = BackupService.removeBackup(backup);
                 if (removeSuccess) {
                     JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-                    String message = "Successfully removed backup";
-
                     res.status(HttpStatus.OK());
-                    return new Response(message, jsonElement);
+                    return new Answer(BackupApiConstants.SUCCESSFULLY_REMOVED_BACKUP, jsonElement);
                 } else {
                     res.status(HttpStatus.InternalError());
-                    return new Response("Backup could not be removed");
+                    return new Answer(BackupApiConstants.ERROR_REMOVING_BACKUP);
                 }
             } catch (JsonParseException e) {
                 res.status(HttpStatus.BadRequest());
-                return new Response("Object is not a backup");
+                return new Answer(BackupApiConstants.ERROR_PROVIDED_OBJECT_IS_NOT_A_BACKUP);
             }
         }, new JsonTransformer());
 
@@ -123,7 +96,7 @@ public class ApiRestService {
             SampleService sampleService = new SampleService();
             if (!sampleService.tryConnection()) {
                 res.status(HttpStatus.InternalError());
-                return new Response("Could not connect to database");
+                return new Answer(SampleApiConstants.ERROR_CONNECTING_TO_DATABASE);
             }
 
             InputStream inputStream = filePart.getInputStream();
@@ -143,7 +116,7 @@ public class ApiRestService {
             }
             stream.close();
             int added = count - errorLines.size();
-            if (added > 0) sampleService.vacuumInto();
+            if (added > 0) sampleService.vacuumInto(); // aquí debería llamar a new createbackuphandler... lógica repetida
 
             // If backups > 14, remove oldest backup
             Collection<Backup> backups = BackupService.getBackups();
@@ -155,7 +128,7 @@ public class ApiRestService {
             response.put("errors", errorLines.size());
             response.put("errorLines", errorLines.toString());
             res.status(HttpStatus.OK());
-            return new Response(new Gson().toJsonTree(response));
+            return new Answer(new Gson().toJsonTree(response));
         }, new JsonTransformer());
     }
 }
