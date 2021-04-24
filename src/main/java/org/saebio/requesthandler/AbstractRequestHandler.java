@@ -1,6 +1,7 @@
 package org.saebio.requesthandler;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.saebio.api.Answer;
@@ -45,8 +46,10 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>, Ro
         Map<String, String> queryParams = new HashMap<>();
         Answer answer = process(value, queryParams);
 
+        JsonElement data = answer.getData();
+        if (data != null) response.body(data.toString());
+
         response.status(answer.getStatus());
-        response.body(answer.getData().toString());
-        return answer.getData();
+        return answer;
     }
 }

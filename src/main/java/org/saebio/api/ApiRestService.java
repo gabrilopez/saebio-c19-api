@@ -8,6 +8,8 @@ import org.saebio.backup.BackupApiConstants;
 import org.saebio.backup.BackupService;
 import org.saebio.requesthandler.backup.CreateBackupHandler;
 import org.saebio.requesthandler.backup.GetBackupsHandler;
+import org.saebio.requesthandler.backup.DeleteBackupHandler;
+import org.saebio.requesthandler.backup.PreflightOptionsRequestHandler;
 import org.saebio.sample.Sample;
 import org.saebio.sample.SampleApiConstants;
 import org.saebio.sample.SampleService;
@@ -25,11 +27,16 @@ import java.util.stream.Stream;
 import static spark.Spark.*;
 
 public class ApiRestService {
+    private static final String accessControlAllowMethods = "GET, POST, DELETE, OPTIONS";
+    private static final String accessControlallowHeaders = "Content-Type, Accept";
+
+
     public static void main(String[] args) {
         // Filter after each request
         after((req, res) -> {
             res.header("Access-Control-Allow-Origin", "*");
-            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Methods", accessControlAllowMethods);
+            res.header("Access-Control-Allow-Headers", accessControlallowHeaders);
             res.type("application/json");
             System.gc();
         });
@@ -63,30 +70,13 @@ public class ApiRestService {
         }, new JsonTransformer());
 
 
+        // Handle CORS Preflight Options Request Handler
+        options("/*", new PreflightOptionsRequestHandler());
+
         post("/create-backup", new CreateBackupHandler());
 
-        post("/remove-backup", (req, res) -> {
-            Backup backup;
-            try {
-                backup = new Gson().fromJson(req.body(), Backup.class);
-                if (!BackupService.backupExists(backup)) {
-                    res.status(HttpStatus.BadRequest());
-                    return new Answer(BackupApiConstants.ERROR_BACKUP_DOES_NOT_EXIST);
-                }
-                boolean removeSuccess = BackupService.removeBackup(backup);
-                if (removeSuccess) {
-                    JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-                    res.status(HttpStatus.OK());
-                    return new Answer(BackupApiConstants.SUCCESSFULLY_REMOVED_BACKUP, jsonElement);
-                } else {
-                    res.status(HttpStatus.InternalError());
-                    return new Answer(BackupApiConstants.ERROR_REMOVING_BACKUP);
-                }
-            } catch (JsonParseException e) {
-                res.status(HttpStatus.BadRequest());
-                return new Answer(BackupApiConstants.ERROR_PROVIDED_OBJECT_IS_NOT_A_BACKUP);
-            }
-        }, new JsonTransformer());
+
+        delete("/backup", new DeleteBackupHandler());
 
         post("/insert-data", (req, res) -> {
             MultipartConfigElement tmp = new MultipartConfigElement("/tmp");
