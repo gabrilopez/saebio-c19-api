@@ -6,10 +6,7 @@ import com.google.gson.JsonParseException;
 import org.saebio.backup.Backup;
 import org.saebio.backup.BackupApiConstants;
 import org.saebio.backup.BackupService;
-import org.saebio.requesthandler.backup.CreateBackupHandler;
-import org.saebio.requesthandler.backup.GetBackupsHandler;
-import org.saebio.requesthandler.backup.DeleteBackupHandler;
-import org.saebio.requesthandler.backup.PreflightOptionsRequestHandler;
+import org.saebio.requesthandler.backup.*;
 import org.saebio.sample.Sample;
 import org.saebio.sample.SampleApiConstants;
 import org.saebio.sample.SampleService;
@@ -27,7 +24,7 @@ import java.util.stream.Stream;
 import static spark.Spark.*;
 
 public class ApiRestService {
-    private static final String accessControlAllowMethods = "GET, POST, DELETE, OPTIONS";
+    private static final String accessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
     private static final String accessControlallowHeaders = "Content-Type, Accept";
 
 
@@ -43,38 +40,12 @@ public class ApiRestService {
 
         get("/backups", new GetBackupsHandler());
 
-        post("/change-database-to-backup", (req, res) -> {
-            Backup backup;
-            try {
-                backup = new Gson().fromJson(req.body(), Backup.class);
-            } catch (JsonParseException e) {
-                res.status(HttpStatus.BadRequest());
-                return new Answer(BackupApiConstants.ERROR_PROVIDED_OBJECT_IS_NOT_A_BACKUP);
-            }
-
-            if (BackupService.backupExists(backup)) {
-                if (BackupService.changeDatabaseToBackup(backup)) {
-                    SampleService.clearCache();
-                    JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-
-                    res.status(HttpStatus.OK());
-                    return new Answer(BackupApiConstants.SUCCESSFULLY_CHANGED_DATABASE_TO_BACKUP + " " + backup.getName(), jsonElement);
-                }
-            } else {
-                res.status(HttpStatus.BadRequest());
-                return new Answer(BackupApiConstants.ERROR_BACKUP_FILE_NOT_FOUND);
-            }
-
-            res.status(HttpStatus.BadRequest());
-            return new Answer(BackupApiConstants.ERROR_FAILED_REPLACE_DATABASE_WITH_BACKUP);
-        }, new JsonTransformer());
-
+        put("/backup/restore", new RestoreBackupHandler());
 
         // Handle CORS Preflight Options Request Handler
         options("/*", new PreflightOptionsRequestHandler());
 
-        post("/create-backup", new CreateBackupHandler());
-
+        post("/backup", new CreateBackupHandler());
 
         delete("/backup", new DeleteBackupHandler());
 

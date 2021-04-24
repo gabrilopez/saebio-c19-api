@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 public class Answer {
     private String message;
     private JsonElement data;
-    private int status;
+    private transient int status;
 
     public Answer(String message) {
         this.message = message;

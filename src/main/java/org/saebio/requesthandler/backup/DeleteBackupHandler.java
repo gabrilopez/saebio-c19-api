@@ -24,8 +24,7 @@ public class DeleteBackupHandler extends AbstractRequestHandler<Backup> {
         }
 
         if (BackupService.removeBackup(value)) {
-            JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-            return new Answer(BackupApiConstants.SUCCESSFULLY_REMOVED_BACKUP, jsonElement, HttpStatus.OK());
+            return new Answer(BackupApiConstants.SUCCESSFULLY_REMOVED_BACKUP, HttpStatus.OK());
         }
 
         return new Answer(BackupApiConstants.ERROR_REMOVING_BACKUP, HttpStatus.InternalError());

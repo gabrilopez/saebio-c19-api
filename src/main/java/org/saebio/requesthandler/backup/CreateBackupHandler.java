@@ -28,8 +28,8 @@ public class CreateBackupHandler extends AbstractRequestHandler<EmptyRequestBody
             // If backups > 14, remove oldest backup
             Collection<Backup> backups = BackupService.getBackups();
             if (backups.size() > 14) BackupService.removeOldestBackup();
-            JsonElement jsonElement = new Gson().toJsonTree(BackupService.getBackups());
-            return new Answer(BackupApiConstants.SUCCESSFULLY_GENERATED_BACKUP, jsonElement, HttpStatus.Created());
+            
+            return new Answer(BackupApiConstants.SUCCESSFULLY_GENERATED_BACKUP, HttpStatus.Created());
         } else {
             return new Answer(BackupApiConstants.ERROR_GENERATING_BACKUP, HttpStatus.InternalError());
         }

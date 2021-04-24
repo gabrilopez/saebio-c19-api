@@ -46,9 +46,7 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>, Ro
         Map<String, String> queryParams = new HashMap<>();
         Answer answer = process(value, queryParams);
 
-        JsonElement data = answer.getData();
-        if (data != null) response.body(data.toString());
-
+        response.body(new Gson().toJson(answer));
         response.status(answer.getStatus());
         return answer;
     }
