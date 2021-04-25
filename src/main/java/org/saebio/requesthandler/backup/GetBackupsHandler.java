@@ -3,7 +3,7 @@ package org.saebio.requesthandler.backup;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.saebio.api.Answer;
-import org.saebio.api.EmptyRequestBody;
+import org.saebio.api.UnparsedRequestBody;
 import org.saebio.api.HttpStatus;
 import org.saebio.backup.Backup;
 import org.saebio.backup.BackupApiConstants;
@@ -14,14 +14,14 @@ import org.saebio.sample.SampleService;
 import java.util.Collection;
 import java.util.Map;
 
-public class GetBackupsHandler extends AbstractRequestHandler<EmptyRequestBody> {
+public class GetBackupsHandler extends AbstractRequestHandler<UnparsedRequestBody> {
 
     public GetBackupsHandler() {
-        super(EmptyRequestBody.class);
+        super(UnparsedRequestBody.class);
     }
 
     @Override
-    protected Answer processImpl(EmptyRequestBody value, Map<String, String> queryParams) {
+    protected Answer processImpl(UnparsedRequestBody value, Map<String, String> queryParams) {
         Collection<Backup> backups = BackupService.getBackups();
         SampleService sampleService = new SampleService(); // este sería mi model
         if (sampleService.tryConnection()) {

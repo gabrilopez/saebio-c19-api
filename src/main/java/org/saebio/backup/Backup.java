@@ -66,4 +66,8 @@ public class Backup {
                 && backup.createdAt.equals(this.createdAt)
                 && backup.selected.equals(this.selected));
     }
+
+    public boolean isValid() {
+        return (this.name != null && this.size != null && this.createdAt != null && this.selected != null);
+    }
 }

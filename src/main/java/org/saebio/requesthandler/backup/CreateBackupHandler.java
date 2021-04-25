@@ -1,9 +1,7 @@
 package org.saebio.requesthandler.backup;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import org.saebio.api.Answer;
-import org.saebio.api.EmptyRequestBody;
+import org.saebio.api.UnparsedRequestBody;
 import org.saebio.api.HttpStatus;
 import org.saebio.backup.Backup;
 import org.saebio.backup.BackupApiConstants;
@@ -14,14 +12,14 @@ import org.saebio.sample.SampleService;
 import java.util.Collection;
 import java.util.Map;
 
-public class CreateBackupHandler extends AbstractRequestHandler<EmptyRequestBody> {
+public class CreateBackupHandler extends AbstractRequestHandler<UnparsedRequestBody> {
 
     public CreateBackupHandler() {
-        super(EmptyRequestBody.class);
+        super(UnparsedRequestBody.class);
     }
 
     @Override
-    protected Answer processImpl(EmptyRequestBody value, Map<String, String> queryParams) {
+    protected Answer processImpl(UnparsedRequestBody value, Map<String, String> queryParams) {
         SampleService sampleService = new SampleService(); // sustituir por model
         boolean success = sampleService.vacuumInto();
         if (success) {
