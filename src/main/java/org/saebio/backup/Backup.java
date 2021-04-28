@@ -1,7 +1,7 @@
 package org.saebio.backup;
 
 import org.apache.commons.io.FileUtils;
-import org.saebio.sample.SampleService;
+import org.saebio.utils.SqliteModel;
 import org.saebio.utils.Utils;
 
 import java.io.File;
@@ -20,7 +20,7 @@ public class Backup {
     public Backup(File file) {
         this.backupFile = file;
         this.name = file.getName();
-        this.selected = this.name.equals(SampleService.getDatabaseFileName());
+        this.selected = this.name.equals(SqliteModel.getDatabaseFileName());
         try {
             BasicFileAttributes basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
             this.size = FileUtils.byteCountToDisplaySize(basicFileAttributes.size());

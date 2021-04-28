@@ -6,7 +6,8 @@ import org.saebio.api.Answer;
 import org.saebio.requesthandler.exception.AbstractRequestException;
 import org.saebio.requesthandler.exception.InvalidRequestBodyObjectException;
 import org.saebio.requesthandler.exception.InvalidRequestFormDataException;
-import org.saebio.utils.Model;
+import org.saebio.utils.BackupModel;
+import org.saebio.utils.DatabaseModel;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -20,16 +21,28 @@ import java.util.*;
 public abstract class AbstractRequestHandler<V> implements RequestHandler<V>, Route {
 
     private final Class<V> valueClass;
-    protected Model model;
+    protected DatabaseModel databaseModel;
+    protected BackupModel backupModel;
     protected Map<String, Part> requestParts = new HashMap<>();
 
-    public AbstractRequestHandler(Class<V> valueClass, Model model){
+    public AbstractRequestHandler(Class<V> valueClass, DatabaseModel databaseModel){
         this.valueClass = valueClass;
-        this.model = model;
+        this.databaseModel = databaseModel;
     }
 
     public AbstractRequestHandler(Class<V> valueClass) {
         this.valueClass = valueClass;
+    }
+
+    public AbstractRequestHandler(Class<V> valueClass, BackupModel backupModel) {
+        this.valueClass = valueClass;
+        this.backupModel = backupModel;
+    }
+
+    public AbstractRequestHandler(Class<V> valueClass, DatabaseModel databaseModel, BackupModel backupModel) {
+        this.valueClass = valueClass;
+        this.databaseModel = databaseModel;
+        this.backupModel = backupModel;
     }
 
     public final Answer process(V value, Map<String, String> queryParams) throws AbstractRequestException {
@@ -73,8 +86,9 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>, Ro
     @Override
     public Object handle(Request request, Response response) throws Exception {
         V value = null;
+
         if (requestHasJsonBody(request)) {
-            value = parseRequestBodyToObject(response.body());
+            value = parseRequestBodyToObject(request.body());
         }
 
         if (requestHasFormData(request)) extractRequestFormData(request);
@@ -85,16 +99,5 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>, Ro
         response.body(new Gson().toJson(answer));
         response.status(answer.getStatus());
         return answer;
-
-        /*
-
-        try {
-            value = new Gson().fromJson(request.body(), valueClass);
-            if (requestHasFormData(request)) extractRequestFormData(request);
-        } catch(JsonParseException e) {
-            throw new InvalidRequestBodyException();
-        } catch(IOException | ServletException e) {
-            return new Answer("Request multipart form data could not be parsed", HttpStatus.BadRequest());
-        }*/
     }
 }
