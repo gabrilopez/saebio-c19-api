@@ -1,4 +1,4 @@
-package org.saebio.api;
+package org.saebio.api._utils;
 
 public class UnparsedRequestBody {
 }

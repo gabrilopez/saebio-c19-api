@@ -1,6 +1,6 @@
 package org.saebio.requesthandler;
 
-import org.saebio.api.Answer;
+import org.saebio.api._utils.Answer;
 import org.saebio.requesthandler.exception.AbstractRequestException;
 
 import java.util.Map;

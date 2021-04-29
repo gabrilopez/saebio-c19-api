@@ -1,23 +1,22 @@
-package org.saebio.requesthandler.backup;
+package org.saebio.requesthandler._backup;
 
-import org.saebio.api.Answer;
-import org.saebio.api.HttpStatus;
+import org.saebio.api._utils.Answer;
+import org.saebio.api._utils._answers.InternalErrorAnswer;
+import org.saebio.api._utils._answers.SuccessAnswer;
 import org.saebio.backup.Backup;
-import org.saebio.backup.BackupApiConstants;
 import org.saebio.requesthandler.AbstractRequestHandler;
 import org.saebio.requesthandler.exception.AbstractRequestException;
 import org.saebio.requesthandler.exception.InvalidRequestBodyObjectException;
 import org.saebio.requesthandler.exception.RequestBodyObjectNotFoundException;
-import org.saebio.sample.SampleService;
 import org.saebio.utils.BackupModel;
 
 import java.util.Map;
 
-public class RestoreBackupHandler extends AbstractRequestHandler<Backup> {
-    public RestoreBackupHandler(BackupModel backupModel) {
+public class DeleteBackupHandler extends AbstractRequestHandler<Backup> {
+
+    public DeleteBackupHandler(BackupModel backupModel) {
         super(Backup.class, backupModel);
     }
-
 
     @Override
     protected Answer processImpl(Backup value, Map<String, String> queryParams) throws AbstractRequestException {
@@ -25,15 +24,14 @@ public class RestoreBackupHandler extends AbstractRequestHandler<Backup> {
             throw new InvalidRequestBodyObjectException();
         }
 
-        if (backupModel.backupExists(value)) {
-            if (backupModel.restoreBackup(value)) {
-                SampleService.clearCache();
-                return new Answer(BackupApiConstants.SUCCESSFULLY_CHANGED_DATABASE_TO_BACKUP + " " + value.getName(), HttpStatus.OK());
-            }
-        } else {
+        if (!backupModel.backupExists(value)) {
             throw new RequestBodyObjectNotFoundException();
         }
 
-        return new Answer(BackupApiConstants.ERROR_FAILED_REPLACE_DATABASE_WITH_BACKUP, HttpStatus.BadRequest());
+        if (backupModel.removeBackup(value)) {
+            return new SuccessAnswer("Backup removed");
+        }
+
+        return new InternalErrorAnswer();
     }
 }

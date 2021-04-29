@@ -1,6 +1,6 @@
 package org.saebio.requesthandler.exception;
 
-import org.saebio.api.Answer;
+import org.saebio.api._utils.Answer;
 
 public abstract class AbstractRequestException extends Exception {
     private final Answer answer;

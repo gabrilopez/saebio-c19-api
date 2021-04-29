@@ -2,7 +2,7 @@ package org.saebio.requesthandler;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import org.saebio.api.Answer;
+import org.saebio.api._utils.Answer;
 import org.saebio.requesthandler.exception.AbstractRequestException;
 import org.saebio.requesthandler.exception.InvalidRequestBodyObjectException;
 import org.saebio.requesthandler.exception.InvalidRequestFormDataException;

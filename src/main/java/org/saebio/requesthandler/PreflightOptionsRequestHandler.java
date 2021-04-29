@@ -1,9 +1,8 @@
 package org.saebio.requesthandler;
 
-import org.saebio.api.Answer;
-import org.saebio.api.UnparsedRequestBody;
-import org.saebio.api.HttpStatus;
-import org.saebio.requesthandler.AbstractRequestHandler;
+import org.saebio.api._utils.Answer;
+import org.saebio.api._utils.UnparsedRequestBody;
+import org.saebio.api._utils._answers.SuccessAnswer;
 
 import java.util.Map;
 
@@ -15,6 +14,6 @@ public class PreflightOptionsRequestHandler extends AbstractRequestHandler<Unpar
 
     @Override
     protected Answer processImpl(UnparsedRequestBody value, Map<String, String> queryParams) {
-        return new Answer("OK", HttpStatus.OK());
+        return new SuccessAnswer("OK");
     }
 }

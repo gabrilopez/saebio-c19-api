@@ -1,14 +1,14 @@
-package org.saebio.requesthandler.sample;
+package org.saebio.requesthandler._sample;
 
 import com.google.gson.Gson;
-import org.saebio.api.Answer;
-import org.saebio.api.HttpStatus;
-import org.saebio.api.UnparsedRequestBody;
+import org.saebio.api._utils.Answer;
+import org.saebio.api._utils.UnparsedRequestBody;
+import org.saebio.api._utils._answers.InternalErrorAnswer;
+import org.saebio.api._utils._answers.SuccessAnswer;
 import org.saebio.requesthandler.AbstractRequestHandler;
 import org.saebio.requesthandler.exception.AbstractRequestException;
 import org.saebio.requesthandler.exception.InvalidRequestFormDataException;
 import org.saebio.sample.Sample;
-import org.saebio.sample.SampleApiConstants;
 import org.saebio.sample.SampleService;
 import org.saebio.utils.BackupModel;
 import org.saebio.utils.DatabaseModel;
@@ -40,16 +40,18 @@ public class AddSamplesRequestHandler extends AbstractRequestHandler<UnparsedReq
         }
 
         if (!databaseModel.testConnection()) {
-            return new Answer(SampleApiConstants.ERROR_CONNECTING_TO_DATABASE, HttpStatus.InternalError());
+            return new InternalErrorAnswer("Could not connect to database");
         }
 
         Stream<String> stream = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
                 .lines().skip(1);
 
+
         int count = 0;
         int errorCount = 0;
         HashMap<String, String> errorLines = new HashMap<>();
         SampleService sampleService = new SampleService(databaseModel);
+
         for (String line : (Iterable<String>) stream::iterator) {
             Sample sample = sampleService.handleSampleLine(line);
             if (sample == null) {
@@ -81,6 +83,6 @@ public class AddSamplesRequestHandler extends AbstractRequestHandler<UnparsedReq
         response.put("added", added);
         response.put("errors", errorCount);
         response.put("errorLines", errorLines);
-        return new Answer("Success!", new Gson().toJsonTree(response), HttpStatus.OK());
+        return new SuccessAnswer(new Gson().toJsonTree(response));
     }
 }

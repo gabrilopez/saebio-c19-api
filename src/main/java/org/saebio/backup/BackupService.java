@@ -12,14 +12,13 @@ import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.stream.Collectors;
 
 public class BackupService implements BackupModel {
     private String backupsRoute;
     private SqliteModel sqliteModel;
-    // debe llegar el path!!! no el archivo que se pasa por consola !!!!
+
     public BackupService(String backupsRoute, SqliteModel sqliteModel) {
         this.backupsRoute = backupsRoute;
         this.sqliteModel = sqliteModel;
@@ -44,12 +43,9 @@ public class BackupService implements BackupModel {
         return sort(backupList);
     }
 
-    // prev: changeDatabaseToBackup
     public boolean restoreBackup(Backup backup) {
         SqliteModel.closeConnection();
-        // Path from = new File(SampleService.getDatabaseRoute() + "backups/" + backup.getName()).toPath();
         Path from = new File(backupsRoute + backup.getName()).toPath();
-        // Path to = new File(SampleService.getDatabaseRoute() + SampleService.getDatabaseFileName()).toPath();
         Path to = new File(SqliteModel.getDatabaseRoute() + SqliteModel.getDatabaseFileName()).toPath();
         try {
             Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
