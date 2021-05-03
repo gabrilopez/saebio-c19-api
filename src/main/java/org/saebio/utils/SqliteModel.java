@@ -20,6 +20,9 @@ public class SqliteModel implements DatabaseModel {
         this.connectionUrl = "jdbc:sqlite:" + databaseFileRoute;
         this.user = user;
         this.password = password;
+        System.out.println("CONNECTION URL: " + connectionUrl);
+        System.out.println("USER: " + user);
+        System.out.println("password: " + password);
         databaseRoute = databaseFileRoute.substring(0, lastSlashPosition + 1);
     }
 

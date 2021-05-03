@@ -2,7 +2,7 @@ package org.saebio.requesthandler._sample;
 
 import com.google.gson.Gson;
 import org.saebio.api._utils.Answer;
-import org.saebio.api._utils.UnparsedRequestBody;
+import org.saebio.requesthandler.UnparsedRequestBody;
 import org.saebio.api._utils._answers.InternalErrorAnswer;
 import org.saebio.api._utils._answers.SuccessAnswer;
 import org.saebio.requesthandler.AbstractRequestHandler;

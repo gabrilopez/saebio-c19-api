@@ -3,6 +3,8 @@ package org.saebio.api;
 import com.google.gson.Gson;
 
 import org.saebio.api._utils.Answer;
+import org.saebio.api._utils.InputArgumentsHandler;
+import org.saebio.backup.Backup;
 import org.saebio.backup.BackupService;
 import org.saebio.requesthandler.PreflightOptionsRequestHandler;
 import org.saebio.requesthandler._backup.*;
@@ -15,8 +17,14 @@ import static spark.Spark.*;
 public class ApiRestService {
 
     public static void main(String[] args) {
-        SqliteModel sqliteModel = new SqliteModel("/Users/gabriellopez/Desktop/sqlite/metabase.db", "root", "root");
-        BackupService backupService = new BackupService("/Users/gabriellopez/Desktop/sqlite/backups/", sqliteModel);
+        InputArgumentsHandler inputArgumentsHandler = new InputArgumentsHandler(args);
+
+        SqliteModel sqliteModel = new SqliteModel(
+                inputArgumentsHandler.getOption("database"),
+                inputArgumentsHandler.getOption("user"),
+                inputArgumentsHandler.getOption("password"));
+
+        BackupService backupService = new BackupService(sqliteModel);
 
         // Add CORS headers before each request
         before((request, response) -> {
