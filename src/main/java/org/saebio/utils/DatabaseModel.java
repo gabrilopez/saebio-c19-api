@@ -16,4 +16,6 @@ public interface DatabaseModel {
     Sample getFirstSampleFromCurrentEpisode(String NHC);
 
     int getRowCount();
+
+    boolean updateSampleLineageAndVariant(Sample sample);
 }

@@ -1,7 +1,7 @@
-org/saebio/requesthandler/_sample/AddSamplesRequestHandler$1.class
 org/saebio/requesthandler/exception/InvalidRequestFormDataException.class
 org/saebio/sample/SampleService.class
 org/saebio/api/_utils/InputArgumentsHandler.class
+org/saebio/requesthandler/_sample/PutSamplesRequestHandler$1.class
 org/saebio/backup/BackupService.class
 org/saebio/requesthandler/exception/AbstractRequestException.class
 org/saebio/requesthandler/_backup/GetBackupsHandler.class
@@ -22,9 +22,9 @@ org/saebio/requesthandler/_backup/CreateBackupHandler.class
 org/saebio/utils/SqliteModel.class
 org/saebio/requesthandler/PreflightOptionsRequestHandler.class
 org/saebio/api/_utils/_answers/SuccessAnswer.class
-org/saebio/requesthandler/_sample/AddSamplesRequestHandler.class
 org/saebio/utils/Utils.class
 org/saebio/requesthandler/_backup/RestoreBackupHandler.class
+org/saebio/requesthandler/_sample/PutSamplesRequestHandler.class
 org/saebio/backup/Backup.class
 org/saebio/requesthandler/exception/RequestBodyObjectNotFoundException.class
 org/saebio/sample/Sample.class

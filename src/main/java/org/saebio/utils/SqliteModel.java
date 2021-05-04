@@ -130,6 +130,26 @@ public class SqliteModel implements DatabaseModel {
         return 0;
     }
 
+    @Override
+    public boolean updateSampleLineageAndVariant(Sample sample) {
+        try {
+            PreparedStatement preparedStatement = getConnection().prepareStatement("" +
+                    "UPDATE Samples SET variant = ?, lineage = ? WHERE NHC = ? AND petition = ?");
+
+            preparedStatement.setString(1, sample.getVariant());
+            preparedStatement.setString(2, sample.getLineage());
+            preparedStatement.setString(3, sample.getNHC());
+            preparedStatement.setInt(4, sample.getPetition());
+            preparedStatement.execute();
+            return true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return false;
+        } finally {
+            closeConnection();
+        }
+    }
+
     public boolean vacuumInto(String backupRoute) {
         try {
             Statement statement = getConnection().createStatement();

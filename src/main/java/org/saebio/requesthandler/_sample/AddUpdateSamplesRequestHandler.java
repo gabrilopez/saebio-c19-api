@@ -22,9 +22,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class AddSamplesRequestHandler extends AbstractRequestHandler<UnparsedRequestBody> {
+public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<UnparsedRequestBody> {
 
-    public AddSamplesRequestHandler(DatabaseModel databaseModel, BackupModel backupModel) {
+    public AddUpdateSamplesRequestHandler(DatabaseModel databaseModel, BackupModel backupModel) {
         super(UnparsedRequestBody.class, databaseModel, backupModel);
     }
 
@@ -48,6 +48,7 @@ public class AddSamplesRequestHandler extends AbstractRequestHandler<UnparsedReq
 
 
         int count = 0;
+        int updatedLineageAndVariantCount = 0;
         int errorCount = 0;
         HashMap<String, String> errorLines = new HashMap<>();
         SampleService sampleService = new SampleService(databaseModel);
@@ -62,6 +63,11 @@ public class AddSamplesRequestHandler extends AbstractRequestHandler<UnparsedReq
                     case SAMPLE_ALREADY_EXISTS:
                         errorCount++;
                         errorLines.put("alreadyExistingSamples", errorLines.getOrDefault("alreadyExistingSamples", "") + (count + 1) + ", ");
+
+                        // Update lineage and variant of already existing samples
+                        if (sample.getVariant() != null || sample.getLineage() != null) {
+                            updatedLineageAndVariantCount += databaseModel.updateSampleLineageAndVariant(sample) ? 1 : 0;
+                        }
                         break;
                     case SAMPLE_INSERT_ERROR:
                         errorCount++;
@@ -81,6 +87,7 @@ public class AddSamplesRequestHandler extends AbstractRequestHandler<UnparsedReq
         Map<String, Object> response = new HashMap<>();
         response.put("size", count);
         response.put("added", added);
+        response.put("updatedLineageVariant", updatedLineageAndVariantCount);
         response.put("errors", errorCount);
         response.put("errorLines", errorLines);
         return new SuccessAnswer(new Gson().toJsonTree(response));

@@ -4,12 +4,11 @@ import com.google.gson.Gson;
 
 import org.saebio.api._utils.Answer;
 import org.saebio.api._utils.InputArgumentsHandler;
-import org.saebio.backup.Backup;
 import org.saebio.backup.BackupService;
 import org.saebio.requesthandler.PreflightOptionsRequestHandler;
 import org.saebio.requesthandler._backup.*;
 import org.saebio.requesthandler.exception.AbstractRequestException;
-import org.saebio.requesthandler._sample.AddSamplesRequestHandler;
+import org.saebio.requesthandler._sample.AddUpdateSamplesRequestHandler;
 import org.saebio.utils.SqliteModel;
 
 import static spark.Spark.*;
@@ -53,6 +52,6 @@ public class ApiRestService {
 
         delete("/backup", new DeleteBackupHandler(backupService));
 
-        post("/insert-data", new AddSamplesRequestHandler(sqliteModel, backupService));
+        post("/samples", new AddUpdateSamplesRequestHandler(sqliteModel, backupService));
     }
 }

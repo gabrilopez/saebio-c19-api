@@ -2,7 +2,6 @@
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/_backup/CreateBackupHandler.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/backup/BackupService.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/RequestHandler.java
-/Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/_sample/AddSamplesRequestHandler.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/backup/Backup.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/utils/BackupModel.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/AbstractRequestHandler.java
@@ -10,6 +9,7 @@
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/api/_utils/_answers/BadRequestAnswer.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/utils/DatabaseModel.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/utils/SqliteModel.java
+/Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/_sample/PutSamplesRequestHandler.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/UnparsedRequestBody.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/exception/AbstractRequestException.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/exception/InvalidRequestFormDataException.java
