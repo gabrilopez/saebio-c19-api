@@ -22,6 +22,7 @@ public class Sample {
     private String variant = null;
     private String lineage = null;
     private int episode;
+    private String normalizedResult =  null;
 
     public LocalDate getRegistryDate() {
         return registryDate;
@@ -157,6 +158,14 @@ public class Sample {
 
     public void setLineage(String lineage) {
         this.lineage = lineage;
+    }
+
+    public String getNormalizedResult() {
+        return normalizedResult;
+    }
+
+    public void setNormalizedResult(String normalizedResult) {
+        this.normalizedResult = normalizedResult;
     }
 
     public boolean belongToSameEpisode(Sample oldSample) {

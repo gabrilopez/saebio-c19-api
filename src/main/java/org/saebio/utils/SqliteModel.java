@@ -62,8 +62,8 @@ public class SqliteModel implements DatabaseModel {
     public InsertStatus addSample(Sample sample) {
         try {
             PreparedStatement preparedStatement = getConnection().prepareStatement("INSERT INTO Samples " +
-                    "(registryDate, patientName, patientSurname, birthDate, NHC, petition, service, criteria, resultPCR, resultTMA, sex, age, origin, reason, variant, lineage, episode)" +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "(registryDate, patientName, patientSurname, birthDate, NHC, petition, service, criteria, resultPCR, resultTMA, sex, age, origin, reason, variant, lineage, episode, normalizedResult)" +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             preparedStatement.setObject(1, sample.getRegistryDate());
             preparedStatement.setString(2, sample.getPatientName());
             preparedStatement.setString(3, sample.getPatientSurname());
@@ -81,6 +81,7 @@ public class SqliteModel implements DatabaseModel {
             preparedStatement.setString(15, sample.getVariant());
             preparedStatement.setString(16, sample.getLineage());
             preparedStatement.setInt(17, sample.getEpisode());
+            preparedStatement.setString(18, sample.getNormalizedResult());
 
             preparedStatement.execute();
         } catch (SQLException e) {
@@ -184,6 +185,7 @@ public class SqliteModel implements DatabaseModel {
             sample.setVariant(resultSet.getString("variant"));
             sample.setLineage(resultSet.getString("lineage"));
             sample.setEpisode(resultSet.getInt("episode"));
+            sample.setNormalizedResult(resultSet.getString("normalizedResult"));
         } catch (SQLException e) {
             return null;
         } catch (Exception e) {

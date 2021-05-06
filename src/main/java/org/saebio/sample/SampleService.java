@@ -44,6 +44,7 @@ public class SampleService {
             if (line.length > 13) sample.setReason(!line[13].trim().isEmpty() ? line[13] : null);
             if (line.length > 14) sample.setVariant(!line[14].trim().isEmpty() ? line[14] : null);
             if (line.length > 15) sample.setLineage(!line[15].trim().isEmpty() ? line[15] : null);
+            sample.setNormalizedResult(getSampleNormalizedResult(sample));
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
             e.printStackTrace();
@@ -72,6 +73,27 @@ public class SampleService {
         if (oldSample == null || oldSample.getEpisode() < newSample.getEpisode()) {
             cache.put(NHC, newSample);
         }
+    }
+
+    private String getSampleNormalizedResult(Sample sample) {
+        String sampleResult = sample.getResultPCR() != null ? sample.getResultPCR() : sample.getResultTMA();
+        if (sampleResult != null) {
+            sampleResult = sampleResult.toLowerCase();
+        } else {
+            return null;
+        }
+        if (sampleResult.matches(".*positivo.*")) {
+            if (sampleResult.matches(".*seguimiento.*")) {
+                return null;
+            }
+            return NormalizedResults.RESULT_POSITIVO;
+        }
+
+        if (sampleResult.matches(".*negativo.*")) {
+            return NormalizedResults.RESULT_NEGATIVO;
+        }
+
+        return null;
     }
 
     public static void clearCache() {
