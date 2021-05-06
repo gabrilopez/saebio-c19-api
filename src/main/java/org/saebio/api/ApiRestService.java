@@ -23,6 +23,11 @@ public class ApiRestService {
                 inputArgumentsHandler.getOption("user"),
                 inputArgumentsHandler.getOption("password"));
 
+        if (!sqliteModel.testConnection()) {
+            System.out.println("Database connection error");
+            System.exit(1);
+        }
+
         BackupService backupService = new BackupService(sqliteModel);
 
         // Add CORS headers before each request
