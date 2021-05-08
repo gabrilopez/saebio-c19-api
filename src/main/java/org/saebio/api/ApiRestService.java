@@ -18,17 +18,12 @@ public class ApiRestService {
     public static void main(String[] args) {
         InputArgumentsHandler inputArgumentsHandler = new InputArgumentsHandler(args);
 
-        SqliteModel sqliteModel = new SqliteModel(
-                inputArgumentsHandler.getOption("database"),
-                inputArgumentsHandler.getOption("user"),
-                inputArgumentsHandler.getOption("password"));
+        SqliteModel sqliteModel = new SqliteModel(inputArgumentsHandler.getOption("database"));
+        BackupService backupService = new BackupService(sqliteModel);
 
         if (!sqliteModel.testConnection()) {
-            System.out.println("Database connection error");
             System.exit(1);
         }
-
-        BackupService backupService = new BackupService(sqliteModel);
 
         // Add CORS headers before each request
         before((request, response) -> {

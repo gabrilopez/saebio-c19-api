@@ -11,19 +11,13 @@ public class SqliteModel implements DatabaseModel {
     private static String databaseFileName;
     private static String databaseRoute;
     private final String connectionUrl;
-    private final String user;
-    private final String password;
 
-    public SqliteModel(String databaseFileRoute, String user, String password) {
+    public SqliteModel(String databaseFileRoute) {
         int lastSlashPosition = databaseFileRoute.lastIndexOf(File.separatorChar);
         databaseFileName = databaseFileRoute.substring(lastSlashPosition + 1);
         this.connectionUrl = "jdbc:sqlite:" + databaseFileRoute;
-        this.user = user;
-        this.password = password;
-        System.out.println("CONNECTION URL: " + connectionUrl);
-        System.out.println("USER: " + user);
-        System.out.println("password: " + password);
         databaseRoute = databaseFileRoute.substring(0, lastSlashPosition + 1);
+        System.out.println("CONNECTION URL: " + connectionUrl);
     }
 
     public static void closeConnection() {
@@ -35,10 +29,17 @@ public class SqliteModel implements DatabaseModel {
         }
     }
 
+    private boolean validateDatabaseFile(String route) {
+        File file = new File(route);
+
+        int extensionIndex = file.getName().lastIndexOf(".");
+        return extensionIndex != -1 && ((file.getName()).substring(extensionIndex).equals(".db"));
+    }
+
     private Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             try {
-                connection = DriverManager.getConnection(connectionUrl, user, password);
+                connection = DriverManager.getConnection(connectionUrl);
                 return connection;
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
@@ -49,13 +50,18 @@ public class SqliteModel implements DatabaseModel {
     @Override
     public boolean testConnection() {
         try{
-            Connection conn = this.getConnection();
-            if (conn != null) return true;
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+            if (!validateDatabaseFile(databaseRoute + databaseFileName)) {
+                System.out.println("Invalid database file");
+                return false;
+            }
+            this.getConnection().prepareStatement("SELECT 1 FROM Samples").executeQuery();
+        } catch (SQLException e) {
+            System.err.println("Database connection error: " + e.getMessage());
             return false;
+        } finally {
+            closeConnection();
         }
-        return false;
+        return true;
     }
 
     @Override

@@ -10,15 +10,7 @@ public class InputArgumentsHandler {
         Option databaseOption = new Option("d", "database", true, "database file path");
         databaseOption.setRequired(true);
 
-        Option databaseUserOption = new Option("u", "user", true, "database user name");
-        databaseUserOption.setRequired(true);
-
-        Option databaseUserPasswordOption = new Option("p", "password", true, "database user password");
-        databaseUserPasswordOption.setRequired(true);
-
         options.addOption(databaseOption);
-        options.addOption(databaseUserOption);
-        options.addOption(databaseUserPasswordOption);
 
         CommandLineParser parser = new DefaultParser();
         try {
