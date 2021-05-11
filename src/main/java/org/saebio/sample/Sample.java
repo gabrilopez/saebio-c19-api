@@ -170,6 +170,6 @@ public class Sample {
 
     public boolean belongToSameEpisode(Sample oldSample) {
         long daysBetween = DAYS.between(oldSample.getRegistryDate(), this.getRegistryDate());
-        return Math.abs(daysBetween) < 30 && this.getNHC().equals(oldSample.getNHC());
+        return Math.abs(daysBetween) < 90 && this.getNHC().equals(oldSample.getNHC());
     }
 }
