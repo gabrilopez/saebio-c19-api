@@ -87,7 +87,7 @@ public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<Unpar
         Map<String, Object> response = new HashMap<>();
         response.put("size", count);
         response.put("added", added);
-        response.put("updatedLineageVariant", updatedReasonLineageAndVariantCount);
+        response.put("updatedReasonLineageVariant", updatedReasonLineageAndVariantCount);
         response.put("errors", errorCount);
         response.put("errorLines", errorLines);
         return new SuccessAnswer(new Gson().toJsonTree(response));
