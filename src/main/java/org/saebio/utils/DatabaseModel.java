@@ -17,5 +17,5 @@ public interface DatabaseModel {
 
     int getRowCount();
 
-    boolean updateSampleLineageAndVariant(Sample sample);
+    boolean updateSampleReasonLineageAndVariant(Sample sample);
 }

@@ -75,7 +75,7 @@ public class SqliteModel implements DatabaseModel {
             preparedStatement.setString(3, sample.getPatientSurname());
             preparedStatement.setObject(4, sample.getBirthDate());
             preparedStatement.setString(5, sample.getNHC());
-            preparedStatement.setInt(6, sample.getPetition());
+            preparedStatement.setString(6, sample.getPetition());
             preparedStatement.setString(7, sample.getService());
             preparedStatement.setString(8, sample.getCriteria());
             preparedStatement.setString(9, sample.getResultPCR());
@@ -138,15 +138,16 @@ public class SqliteModel implements DatabaseModel {
     }
 
     @Override
-    public boolean updateSampleLineageAndVariant(Sample sample) {
+    public boolean updateSampleReasonLineageAndVariant(Sample sample) {
         try {
             PreparedStatement preparedStatement = getConnection().prepareStatement("" +
-                    "UPDATE Samples SET variant = ?, lineage = ? WHERE NHC = ? AND petition = ?");
+                    "UPDATE Samples SET variant = ?, lineage = ?, reason = ? WHERE NHC = ? AND petition = ?");
 
             preparedStatement.setString(1, sample.getVariant());
             preparedStatement.setString(2, sample.getLineage());
-            preparedStatement.setString(3, sample.getNHC());
-            preparedStatement.setInt(4, sample.getPetition());
+            preparedStatement.setString(3, sample.getReason());
+            preparedStatement.setString(4, sample.getNHC());
+            preparedStatement.setString(5, sample.getPetition());
             preparedStatement.execute();
             return true;
         } catch (SQLException throwables) {
@@ -179,7 +180,7 @@ public class SqliteModel implements DatabaseModel {
             sample.setPatientSurname(resultSet.getString("patientSurname"));
             sample.setBirthDate(LocalDate.parse((CharSequence) resultSet.getDate("birthDate")));
             sample.setNHC(resultSet.getString("NHC"));
-            sample.setPetition(resultSet.getInt("petition"));
+            sample.setPetition(resultSet.getString("petition"));
             sample.setService(resultSet.getString("service"));
             sample.setCriteria(resultSet.getString("criteria"));
             sample.setCriteria(resultSet.getString("resultPCR"));

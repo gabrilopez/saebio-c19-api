@@ -10,7 +10,7 @@ public class Sample {
     private String patientSurname;
     private LocalDate birthDate;
     private String NHC;
-    private int petition;
+    private String petition;
     private String service;
     private String criteria;
     private String resultPCR = null;
@@ -64,11 +64,11 @@ public class Sample {
         this.NHC = NHC;
     }
 
-    public int getPetition() {
+    public String getPetition() {
         return petition;
     }
 
-    public void setPetition(int petition) {
+    public void setPetition(String petition) {
         this.petition = petition;
     }
 

@@ -48,7 +48,7 @@ public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<Unpar
 
 
         int count = 0;
-        int updatedLineageAndVariantCount = 0;
+        int updatedReasonLineageAndVariantCount = 0;
         int errorCount = 0;
         HashMap<String, String> errorLines = new HashMap<>();
         SampleService sampleService = new SampleService(databaseModel);
@@ -65,8 +65,8 @@ public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<Unpar
                         errorLines.put("alreadyExistingSamples", errorLines.getOrDefault("alreadyExistingSamples", "") + (count + 1) + ", ");
 
                         // Update lineage and variant of already existing samples
-                        if (sample.getVariant() != null || sample.getLineage() != null) {
-                            updatedLineageAndVariantCount += databaseModel.updateSampleLineageAndVariant(sample) ? 1 : 0;
+                        if (sample.getVariant() != null || sample.getLineage() != null || sample.getReason() != null) {
+                            updatedReasonLineageAndVariantCount += databaseModel.updateSampleReasonLineageAndVariant(sample) ? 1 : 0;
                         }
                         break;
                     case SAMPLE_INSERT_ERROR:
@@ -87,7 +87,7 @@ public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<Unpar
         Map<String, Object> response = new HashMap<>();
         response.put("size", count);
         response.put("added", added);
-        response.put("updatedLineageVariant", updatedLineageAndVariantCount);
+        response.put("updatedLineageVariant", updatedReasonLineageAndVariantCount);
         response.put("errors", errorCount);
         response.put("errorLines", errorLines);
         return new SuccessAnswer(new Gson().toJsonTree(response));

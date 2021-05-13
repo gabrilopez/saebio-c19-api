@@ -27,23 +27,23 @@ public class SampleService {
         Sample sample = new Sample();
         try {
             sample.setRegistryDate(LocalDate.parse(line[0].split(" ")[0], Utils.dateTimeFormatter));
-            sample.setPatientName(line[1]);
-            sample.setPatientSurname(line[2]);
+            sample.setPatientName(line[1].trim());
+            sample.setPatientSurname(line[2].trim());
             sample.setBirthDate(LocalDate.parse(line[3], Utils.dateTimeFormatter));
-            sample.setNHC(line[4]);
-            sample.setPetition(Integer.parseInt(line[5]));
-            sample.setService(line[6]);
-            sample.setCriteria(line[7]);
-            if (!line[8].trim().isEmpty()) sample.setResultPCR(line[8]);
+            sample.setNHC(line[4].trim());
+            sample.setPetition(line[5].trim());
+            sample.setService(line[6].trim());
+            sample.setCriteria(line[7].trim());
+            if (!line[8].trim().isEmpty()) sample.setResultPCR(line[8].trim());
 
             // El hospital doctor negrín está trabajando en implementar estos campos
-            if (line.length > 9 && !line[9].trim().isEmpty()) sample.setResultTMA(line[9]);
-            if (line.length > 10) sample.setSex(!line[10].trim().isEmpty() ? line[10] : null);
+            if (line.length > 9 && !line[9].trim().isEmpty()) sample.setResultTMA(line[9].trim());
+            if (line.length > 10) sample.setSex(!line[10].trim().isEmpty() ? line[10].trim() : null);
             if (line.length > 11) sample.setAge(Utils.isNumeric(line[11]) ? Integer.valueOf(line[11]) : null);
-            if (line.length > 12) sample.setOrigin(!line[12].trim().isEmpty() ? line[12] : null);
-            if (line.length > 13) sample.setReason(!line[13].trim().isEmpty() ? line[13] : null);
-            if (line.length > 14) sample.setVariant(!line[14].trim().isEmpty() ? line[14] : null);
-            if (line.length > 15) sample.setLineage(!line[15].trim().isEmpty() ? line[15] : null);
+            if (line.length > 12) sample.setOrigin(!line[12].trim().isEmpty() ? line[12].trim() : null);
+            if (line.length > 13) sample.setReason(!line[13].trim().isEmpty() ? line[13].trim() : null);
+            if (line.length > 14) sample.setVariant(!line[14].trim().isEmpty() ? line[14].trim() : null);
+            if (line.length > 15) sample.setLineage(!line[15].trim().isEmpty() ? line[15].trim() : null);
             sample.setNormalizedResult(getSampleNormalizedResult(sample));
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
