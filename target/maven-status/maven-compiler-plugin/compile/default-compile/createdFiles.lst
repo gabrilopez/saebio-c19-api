@@ -8,6 +8,7 @@ org/saebio/requesthandler/exception/AbstractRequestException.class
 org/saebio/requesthandler/_backup/GetBackupsHandler.class
 org/saebio/requesthandler/_backup/DeleteBackupHandler.class
 org/saebio/sample/NormalizedResults.class
+org/saebio/utils/LogManager.class
 org/saebio/api/_utils/HttpStatus.class
 org/saebio/requesthandler/AbstractRequestHandler.class
 org/saebio/utils/BackupModel.class

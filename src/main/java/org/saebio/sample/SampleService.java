@@ -1,9 +1,11 @@
 package org.saebio.sample;
 
 import org.saebio.utils.DatabaseModel;
+import org.saebio.utils.LogManager;
 import org.saebio.utils.Utils;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public class SampleService {
             sample.setNormalizedResult(getSampleNormalizedResult(sample));
             sample.setEpisode(getSampleEpisodeNumber(sample));
         } catch(Exception e) {
-            e.printStackTrace();
+            LogManager.error("SampleService::createSampleFromLine::\n" + Arrays.toString(line) + "\n" + e.toString(), e);
             return null;
         }
         updateSampleCache(sample);

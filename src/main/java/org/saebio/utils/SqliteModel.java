@@ -17,7 +17,6 @@ public class SqliteModel implements DatabaseModel {
         databaseFileName = databaseFileRoute.substring(lastSlashPosition + 1);
         this.connectionUrl = "jdbc:sqlite:" + databaseFileRoute;
         databaseRoute = databaseFileRoute.substring(0, lastSlashPosition + 1);
-        System.out.println("CONNECTION URL: " + connectionUrl);
     }
 
     public static void closeConnection() {
@@ -41,8 +40,8 @@ public class SqliteModel implements DatabaseModel {
             try {
                 connection = DriverManager.getConnection(connectionUrl);
                 return connection;
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            } catch (SQLException e) {
+                LogManager.error("SqliteModel::getConnection::" + e.toString(), e);
             }
         }
         return connection;
@@ -56,7 +55,7 @@ public class SqliteModel implements DatabaseModel {
             }
             this.getConnection().prepareStatement("SELECT 1 FROM Samples").executeQuery();
         } catch (SQLException e) {
-            System.err.println("Database connection error: " + e.getMessage());
+            LogManager.error("SqliteModel::testConnection::" + e.toString(), e);
             return false;
         } finally {
             closeConnection();
@@ -92,6 +91,7 @@ public class SqliteModel implements DatabaseModel {
             preparedStatement.execute();
         } catch (SQLException e) {
             String message = e.getMessage();
+            LogManager.error("SqliteModel::addSample::" + sample.getNHC() + "::" + e.toString(), e);
             return message.contains("UNIQUE constraint failed") ? InsertStatus.SAMPLE_ALREADY_EXISTS : InsertStatus.SAMPLE_INSERT_ERROR;
         } finally {
             closeConnection();
@@ -115,6 +115,7 @@ public class SqliteModel implements DatabaseModel {
             }
             return null;
         } catch(SQLException e) {
+            LogManager.error("SqliteModel::getFirstSampleForCurrentEpisode::" + NHC + "::" + e.toString(), e);
             return null;
         } finally {
             closeConnection();
@@ -129,8 +130,8 @@ public class SqliteModel implements DatabaseModel {
             );
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) return resultSet.getInt("row_count");
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            LogManager.error("SqliteModel::getRowCount::" + e.toString(), e);
         } finally {
             closeConnection();
         }

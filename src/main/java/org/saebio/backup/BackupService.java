@@ -2,6 +2,7 @@ package org.saebio.backup;
 
 import org.apache.commons.io.FileUtils;
 import org.saebio.utils.BackupModel;
+import org.saebio.utils.LogManager;
 import org.saebio.utils.SqliteModel;
 
 import java.io.File;
@@ -61,7 +62,7 @@ public class BackupService implements BackupModel {
             Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            LogManager.error("BackupService::restoreBackup::" + backup.getName() + "::" + e.toString(), e);
             return false;
         }
     }

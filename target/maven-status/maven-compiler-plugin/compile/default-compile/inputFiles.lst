@@ -3,6 +3,7 @@
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/_backup/CreateBackupHandler.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/backup/BackupService.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/requesthandler/RequestHandler.java
+/Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/utils/LogManager.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/sample/NormalizedResults.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/backup/Backup.java
 /Users/gabriellopez/Documents/spark-api/src/main/java/org/saebio/utils/BackupModel.java
