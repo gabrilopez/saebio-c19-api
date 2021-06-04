@@ -9,6 +9,7 @@ import org.saebio.requesthandler.PreflightOptionsRequestHandler;
 import org.saebio.requesthandler._backup.*;
 import org.saebio.requesthandler.exception.AbstractRequestException;
 import org.saebio.requesthandler._sample.AddUpdateSamplesRequestHandler;
+import org.saebio.sample.Sample;
 import org.saebio.utils.SqliteModel;
 
 import static spark.Spark.*;
@@ -18,8 +19,9 @@ public class ApiRestService {
     public static void main(String[] args) {
         InputArgumentsHandler inputArgumentsHandler = new InputArgumentsHandler(args);
 
-        SqliteModel sqliteModel = new SqliteModel(inputArgumentsHandler.getOption("database"));
+        SqliteModel sqliteModel = new SqliteModel(inputArgumentsHandler.getDatabaseRoute());
         BackupService backupService = new BackupService(sqliteModel);
+        Sample.setEpisodeLength(inputArgumentsHandler.getEpisodeLength());
 
         if (!sqliteModel.testConnection()) {
             System.exit(1);

@@ -5,6 +5,8 @@ import java.time.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 public class Sample {
+    private static int episodeLength;
+
     private LocalDate registryDate;
     private String patientName;
     private String patientSurname;
@@ -23,6 +25,10 @@ public class Sample {
     private String lineage = null;
     private int episode;
     private String normalizedResult =  null;
+
+    public static void setEpisodeLength(int episodeLength) {
+        Sample.episodeLength = episodeLength;
+    }
 
     public LocalDate getRegistryDate() {
         return registryDate;
@@ -170,6 +176,6 @@ public class Sample {
 
     public boolean belongToSameEpisode(Sample oldSample) {
         long daysBetween = DAYS.between(oldSample.getRegistryDate(), this.getRegistryDate());
-        return Math.abs(daysBetween) < 90 && this.getNHC().equals(oldSample.getNHC());
+        return Math.abs(daysBetween) < episodeLength && this.getNHC().equals(oldSample.getNHC());
     }
 }
