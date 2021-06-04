@@ -46,6 +46,7 @@ public class SqliteModel implements DatabaseModel {
         }
         return connection;
     }
+
     @Override
     public boolean testConnection() {
         try{
@@ -91,8 +92,12 @@ public class SqliteModel implements DatabaseModel {
             preparedStatement.execute();
         } catch (SQLException e) {
             String message = e.getMessage();
-            LogManager.error("SqliteModel::addSample::" + sample.getNHC() + "::" + e.toString(), e);
-            return message.contains("UNIQUE constraint failed") ? InsertStatus.SAMPLE_ALREADY_EXISTS : InsertStatus.SAMPLE_INSERT_ERROR;
+            if (message.contains("UNIQUE constraint failed")) {
+                return InsertStatus.SAMPLE_ALREADY_EXISTS;
+            } else {
+                LogManager.error("SqliteModel::addSample::" + sample.getNHC() + "::" + e.toString(), e);
+                return InsertStatus.SAMPLE_INSERT_ERROR;
+            }
         } finally {
             closeConnection();
         }
