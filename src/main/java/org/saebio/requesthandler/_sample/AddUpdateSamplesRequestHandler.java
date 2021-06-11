@@ -23,6 +23,9 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<UnparsedRequestBody> {
+    private String rowFormatError = "rowFormatError";
+    private String alreadyExistingSamples = "alreadyExistingSamples";
+    private String insertError = "insertError";
 
     public AddUpdateSamplesRequestHandler(DatabaseModel databaseModel, BackupModel backupModel) {
         super(UnparsedRequestBody.class, databaseModel, backupModel);
@@ -47,22 +50,23 @@ public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<Unpar
                 .lines().skip(1);
 
 
-        int count = 0;
+        int rowPos = 1; // row position starts at 1, first row contains headers and is skipped
         int updatedReasonLineageAndVariantCount = 0;
         int errorCount = 0;
         HashMap<String, String> errorLines = new HashMap<>();
         SampleService sampleService = new SampleService(databaseModel);
 
         for (String line : (Iterable<String>) stream::iterator) {
+            rowPos++;
             Sample sample = sampleService.handleSampleLine(line);
             if (sample == null) {
-                errorLines.put("rowFormatError", errorLines.getOrDefault("rowFormatError", "") + (count + 1) + ", ");
+                errorLines.put(rowFormatError, errorLines.getOrDefault(rowFormatError, "") + (rowPos) + ", ");
             } else {
                 DatabaseModel.InsertStatus status = databaseModel.addSample(sample);
                 switch(status) {
                     case SAMPLE_ALREADY_EXISTS:
                         errorCount++;
-                        errorLines.put("alreadyExistingSamples", errorLines.getOrDefault("alreadyExistingSamples", "") + (count + 1) + ", ");
+                        errorLines.put(alreadyExistingSamples, errorLines.getOrDefault(alreadyExistingSamples, "") + (rowPos) + ", ");
 
                         // Update lineage and variant of already existing samples
                         if (sample.getVariant() != null || sample.getLineage() != null || sample.getReason() != null) {
@@ -71,21 +75,24 @@ public class AddUpdateSamplesRequestHandler extends AbstractRequestHandler<Unpar
                         break;
                     case SAMPLE_INSERT_ERROR:
                         errorCount++;
-                        errorLines.put("insertError", errorLines.getOrDefault("insertError", "") + (count + 1) + ", ");
+                        errorLines.put(insertError, errorLines.getOrDefault(insertError, "") + (rowPos) + ", ");
                         break;
                     default:
                         break;
                 }
             }
-            count++;
         }
         stream.close();
 
-        int added = count - errorCount;
+        int added = rowPos - 1 - errorCount;
         if (added > 0) backupModel.createBackupHandler();
 
+        errorLines.computeIfPresent(rowFormatError, (k, v) -> v.replaceAll(", $", ""));
+        errorLines.computeIfPresent(alreadyExistingSamples, (k, v) -> v.replaceAll(", $", ""));
+        errorLines.computeIfPresent(insertError, (k, v) -> v.replaceAll(", $", ""));
+
         Map<String, Object> response = new HashMap<>();
-        response.put("size", count);
+        response.put("size", rowPos - 1);
         response.put("added", added);
         response.put("updatedReasonLineageVariant", updatedReasonLineageAndVariantCount);
         response.put("errors", errorCount);

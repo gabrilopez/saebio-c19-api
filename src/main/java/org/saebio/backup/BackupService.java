@@ -22,7 +22,6 @@ public class BackupService implements BackupModel {
 
     public BackupService(SqliteModel sqliteModel) {
         this.backupsRoute = getBackupsDefaultRoute(SqliteModel.getDatabaseRoute());
-        System.out.println("BACKUPS ROUTE: " + backupsRoute);
         this.sqliteModel = sqliteModel;
     }
 
