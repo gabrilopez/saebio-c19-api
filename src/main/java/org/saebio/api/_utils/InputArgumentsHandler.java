@@ -15,8 +15,13 @@ public class InputArgumentsHandler {
         episodeLengthOption.setRequired(true);
         episodeLengthOption.setType(Number.class);
 
+        Option portOption = new Option("p", "port", true, "port used by Java Spark server");
+        portOption.setRequired(true);
+        portOption.setType(Number.class);
+
         options.addOption(databaseOption);
         options.addOption(episodeLengthOption);
+        options.addOption(portOption);
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -37,6 +42,19 @@ public class InputArgumentsHandler {
                 return ((Number) commandLine.getParsedOptionValue("episode-length")).intValue();
             } catch (ParseException e) {
                 LogManager.error("InputArgumentsHandler::getEpisodeLength::" + e.toString(), e);
+                System.err.println("Parsing failed: " + e.getMessage());
+                System.exit(1);
+            }
+        }
+        return -1;
+    }
+
+    public int getPort() {
+        if (commandLine.hasOption("episode-length")) {
+            try {
+                return ((Number) commandLine.getParsedOptionValue("port")).intValue();
+            } catch (ParseException e) {
+                LogManager.error("InputArgumentsHandler::getPort::" + e.toString(), e);
                 System.err.println("Parsing failed: " + e.getMessage());
                 System.exit(1);
             }

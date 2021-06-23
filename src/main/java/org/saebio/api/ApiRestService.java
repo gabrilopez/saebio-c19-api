@@ -19,6 +19,8 @@ public class ApiRestService {
     public static void main(String[] args) {
         InputArgumentsHandler inputArgumentsHandler = new InputArgumentsHandler(args);
 
+        port(inputArgumentsHandler.getPort());
+
         SqliteModel sqliteModel = new SqliteModel(inputArgumentsHandler.getDatabaseRoute());
         BackupService backupService = new BackupService(sqliteModel);
         Sample.setEpisodeLength(inputArgumentsHandler.getEpisodeLength());
