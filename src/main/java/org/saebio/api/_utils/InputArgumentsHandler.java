@@ -24,9 +24,12 @@ public class InputArgumentsHandler {
         options.addOption(portOption);
 
         CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+
         try {
             this.commandLine = parser.parse(options, args);
         } catch(ParseException e) {
+            formatter.printHelp("option-name", options);
             System.err.println("Parsing failed: " + e.getMessage());
             System.exit(1);
         }
